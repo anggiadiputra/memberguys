@@ -1,0 +1,46 @@
+{
+  "Index": {
+    "title": "Selamat Datang di MemberGuys",
+    "description": "Layanan Web Profesional untuk Bisnis Anda",
+    "login": "Masuk",
+    "register": "Daftar",
+    "dashboard": "Dasbor"
+  },
+  "Auth": {
+    "loginTitle": "Masuk ke akun Anda",
+    "registerTitle": "Buat akun baru",
+    "email": "Alamat Email",
+    "password": "Kata Sandi",
+    "submitLogin": "Masuk",
+    "submitRegister": "Daftar",
+    "noAccount": "Belum punya akun?",
+    "hasAccount": "Sudah punya akun?",
+    "continueWith": "Atau lanjutkan dengan"
+  },
+  "Dashboard": {
+    "greeting": "Selamat datang kembali, {{name}}!",
+    "activePackages": "Paket Aktif",
+    "warrantyLeft": "Sisa Garansi",
+    "thisMonthTrans": "Transaksi Bulan Ini",
+    "openTickets": "Tiket Terbuka",
+    "myPackages": "Paket Saya",
+    "recentTransactions": "Transaksi Terakhir",
+    "viewAll": "Lihat Semua"
+  },
+  "Navigation": {
+    "home": "Beranda",
+    "services": "Layanan",
+    "packages": "Paket Saya",
+    "transactions": "Transaksi",
+    "profile": "Profil",
+    "logout": "Keluar"
+  },
+  "Services": {
+    "vps": "Setup VPS",
+    "malware": "Hapus Malware",
+    "migration": "Migrasi Website",
+    "maintenance": "Maintenance Website",
+    "order": "Pesan Sekarang",
+    "warrantyDays": "Garansi {{days}} Hari"
+  }
+}

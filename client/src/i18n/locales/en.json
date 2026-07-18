@@ -1,0 +1,46 @@
+{
+  "Index": {
+    "title": "Welcome to MemberGuys",
+    "description": "Professional Web Services for Your Business",
+    "login": "Sign In",
+    "register": "Sign Up",
+    "dashboard": "Dashboard"
+  },
+  "Auth": {
+    "loginTitle": "Sign In to your account",
+    "registerTitle": "Create an account",
+    "email": "Email Address",
+    "password": "Password",
+    "submitLogin": "Sign In",
+    "submitRegister": "Sign Up",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "continueWith": "Or continue with"
+  },
+  "Dashboard": {
+    "greeting": "Welcome back, {{name}}!",
+    "activePackages": "Active Packages",
+    "warrantyLeft": "Warranty Left",
+    "thisMonthTrans": "Transactions this Month",
+    "openTickets": "Open Tickets",
+    "myPackages": "My Packages",
+    "recentTransactions": "Recent Transactions",
+    "viewAll": "View All"
+  },
+  "Navigation": {
+    "home": "Home",
+    "services": "Services",
+    "packages": "My Packages",
+    "transactions": "Transactions",
+    "profile": "Profile",
+    "logout": "Sign Out"
+  },
+  "Services": {
+    "vps": "VPS Setup",
+    "malware": "Malware Removal",
+    "migration": "Website Migration",
+    "maintenance": "Website Maintenance",
+    "order": "Order Now",
+    "warrantyDays": "{{days}} Days Warranty"
+  }
+}
