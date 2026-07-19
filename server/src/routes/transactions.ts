@@ -48,25 +48,29 @@ app.post("/", async (c) => {
     const cancelUrl = paymentConfig.cancelUrl || `${host}/payment/cancel?order_id=${transactionId}`;
 
     try {
+      const sumopodPayload = {
+        order_id: transactionId,
+        amount: pkg.price,
+        currency: "IDR",
+        expires_in_hours: 24,
+        success_return_url: successUrl,
+        cancel_return_url: cancelUrl,
+        payment_method_type_code: "QRIS", // Default QRIS SumoPod
+      };
+
       const res = await fetch(`${baseUrl}/api/v1/payments`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "X-Api-Key": paymentConfig.apiKey,
         },
-        body: JSON.stringify({
-          order_id: transactionId,
-          amount: pkg.price,
-          currency: "IDR",
-          expires_in_hours: 24,
-          success_return_url: successUrl,
-          cancel_return_url: cancelUrl,
-          payment_method_type_code: "QRIS", // Default QRIS SumoPod
-        }),
+        body: JSON.stringify(sumopodPayload),
       });
 
       if (!res.ok) {
-        throw new Error("Gagal membuat payment link di SumoPod");
+        const errorData = await res.text();
+        console.error("[SumoPod Error Response]:", errorData);
+        throw new Error(`SumoPod menolak pembayaran: ${res.statusText}`);
       }
 
       const sumopodData = await res.json();
@@ -75,7 +79,7 @@ app.post("/", async (c) => {
       
     } catch (err: any) {
       console.error("[SumoPod] Create payment error:", err.message);
-      return c.json({ error: "Gagal memproses pembayaran. Hubungi admin." }, 502);
+      return c.json({ error: "Gagal membuat invoice di SumoPod. Pastikan API Key valid dan konfigurasi benar." }, 502);
     }
   } else {
     // Fallback: Jika SumoPod belum dikonfigurasi admin, fallback ke WhatsApp manual payment
