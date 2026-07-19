@@ -121,9 +121,14 @@ app.post("/payment/test", async (c) => {
       return c.json({ error: "Invalid API Key" }, 401);
     }
 
+    if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(`API ditolak (${res.status}): ${txt}`);
+    }
+
     return c.json({ status: "ok", httpStatus: res.status });
   } catch (err: any) {
-    return c.json({ error: err.message }, 502);
+    return c.json({ error: err.message || "Network Error" }, 502);
   }
 });
 

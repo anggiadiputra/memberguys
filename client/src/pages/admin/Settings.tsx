@@ -72,9 +72,11 @@ export default function AdminSettingsPage() {
       });
       setTestStatus("ok");
       toast.success("Koneksi SumoPod berhasil!");
-    } catch {
+    } catch (e: any) {
       setTestStatus("fail");
-      toast.error("Gagal terhubung ke SumoPod. Periksa API Key.");
+      // Mencegah React Error 418 dengan memastikan error message adalah string murni
+      const errMsg = typeof e?.message === "string" ? e.message : "Terjadi kesalahan";
+      toast.error(`Gagal terhubung: ${errMsg}`);
     } finally {
       setTesting(false);
     }
