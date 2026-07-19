@@ -1,13 +1,14 @@
 import { Hono } from "hono";
 import { db } from "../db/index.js";
 import { services, packages } from "../db/schema.js";
+import { eq } from "drizzle-orm";
 
 const app = new Hono();
 
 app.get("/", async (c) => {
   // 1. Cek apakah layanan sudah ada
   const existing = await db.query.services.findFirst({
-    where: (s, { eq }) => eq(s.slug, "hapus-malware")
+    where: eq(services.slug, "hapus-malware")
   });
 
   if (existing) {
