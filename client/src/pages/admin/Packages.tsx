@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
-  Plus,
+  Plus, Cloud,
   Database,
   Pencil,
   Trash2,
@@ -170,7 +170,10 @@ export default function AdminPackagesPage() {
                 <CardHeader className="pb-3">
                   <div className="flex justify-between items-start">
                     <div className="flex-1 min-w-0">
-                      <CardTitle className="text-lg truncate">{svc.nameId}</CardTitle>
+                      <div className="flex items-center gap-2">
+                        <Cloud className="w-5 h-5 text-primary shrink-0" />
+                        <CardTitle className="text-lg truncate">{svc.nameId}</CardTitle>
+                      </div>
                       <CardDescription className="truncate">{svc.slug}</CardDescription>
                     </div>
                     <div className="flex items-center gap-1.5 ml-2">

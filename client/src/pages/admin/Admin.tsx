@@ -6,8 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, CreditCard, Package, AlertCircle, Check } from "lucide-react";
+import { Users, CreditCard, Package, AlertCircle, Check, SearchX } from "lucide-react";
 import { toast } from "sonner";
+import { useTable } from "@/hooks/useTable";
+import { SearchInput } from "@/components/table/TableComponents";
 
 export default function AdminPage() {
   const [stats, setStats] = useState<any>(null);
@@ -44,6 +46,19 @@ export default function AdminPage() {
     }
   };
 
+  const table = useTable({
+    data: transactions,
+    pageSize: 50,
+    searchKeys: [
+      (tr: any) => tr.id || "",
+      (tr: any) => tr.user?.name || "",
+      (tr: any) => tr.user?.email || "",
+      (tr: any) => tr.package?.nameId || "",
+      (tr: any) => tr.package?.service?.nameId || "",
+      (tr: any) => tr.status || "",
+    ],
+  });
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -71,29 +86,38 @@ export default function AdminPage() {
         </div>
 
         {/* Transactions Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Transaksi Terbaru</CardTitle>
+        <Card className="shadow-sm overflow-hidden">
+          <CardHeader className="pb-0">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base">Transaksi Terbaru</CardTitle>
+              {!loading && <p className="text-xs text-muted-foreground">{transactions.length} transaksi</p>}
+            </div>
           </CardHeader>
-          <CardContent>
-            {loading ? <Skeleton className="h-40 w-full" /> :
-              transactions.length === 0 ? (
-                <p className="text-center py-10 text-muted-foreground">Belum ada transaksi.</p>
+          <div className="px-4 py-2">
+            <SearchInput value={table.search} onChange={table.setSearch} placeholder="Cari ID, nama, paket..." />
+          </div>
+          <CardContent className="p-0">
+            {loading ? <div className="p-6"><Skeleton className="h-40 w-full" /></div> :
+              table.rows.length === 0 ? (
+                <div className="py-12 text-center text-muted-foreground flex flex-col items-center gap-2">
+                  <SearchX className="w-8 h-8 text-slate-300" />
+                  <p className="text-sm">{transactions.length === 0 ? "Belum ada transaksi." : <span>Tidak ada hasil untuk <span className="font-mono">&quot;{table.search}&quot;</span></span>}</p>
+                </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b text-left text-muted-foreground">
-                        <th className="pb-2 font-medium">ID</th>
-                        <th className="pb-2 font-medium">User</th>
-                        <th className="pb-2 font-medium">Paket</th>
-                        <th className="pb-2 font-medium">Nominal</th>
-                        <th className="pb-2 font-medium">Status</th>
-                        <th className="pb-2 font-medium">Aksi</th>
+                      <tr className="border-b text-left text-xs uppercase tracking-wider text-muted-foreground font-semibold bg-slate-50/50">
+                        <th className="px-4 py-2.5 font-medium">ID</th>
+                        <th className="px-4 py-2.5 font-medium">User</th>
+                        <th className="px-4 py-2.5 font-medium">Paket</th>
+                        <th className="px-4 py-2.5 font-medium text-right">Nominal</th>
+                        <th className="px-4 py-2.5 font-medium">Status</th>
+                        <th className="px-4 py-2.5 font-medium text-right">Aksi</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y">
-                      {transactions.map((tr: any) => (
+                    <tbody className="divide-y divide-slate-100">
+                      {table.rows.map((tr: any) => (
                         <tr key={tr.id}>
                           <td className="py-2 font-mono text-xs max-w-[200px] truncate" title={tr.id}>{tr.id}</td>
                           <td className="py-2">{tr.user?.name ?? tr.userId}</td>
@@ -106,9 +130,19 @@ export default function AdminPage() {
                           </td>
                           <td className="py-2">
                             {tr.status === "pending" && (
-                              <Button size="sm" variant="outline" className="gap-1 h-7 text-xs"
-                                onClick={() => confirmPayment(tr.id)}>
+                              <Button size="sm" variant="outline" className="gap-1 h-7 text-xs" onClick={() => confirmPayment(tr.id)}>
                                 <Check className="h-3 w-3" /> Konfirmasi
+                              </Button>
+                            )}
+                            {tr.status === "paid" && (
+                              <Button size="sm" variant="outline" className="gap-1 h-7 text-xs" onClick={async () => {
+                                try {
+                                  await api.post("/admin/activate-subscription", { transactionId: tr.id }, { headers: { "X-Admin-Id": user.id } });
+                                  toast.success("Garansi berhasil diaktifkan!");
+                                  if (user) loadData(user.id);
+                                } catch (e: any) { toast.error(e.message || "Gagal mengaktifkan garansi"); }
+                              }}>
+                                Aktifkan Garansi
                               </Button>
                             )}
                           </td>

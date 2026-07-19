@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { CheckCircle2, XCircle, Circle, CircleDot, ShieldAlert, AlertTriangle, FileText } from "lucide-react";
+import { CheckCircle2, XCircle, Circle, CircleDot, Cloud, ShieldAlert, AlertTriangle, FileText } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 export default function LayananPage() {
@@ -149,7 +149,7 @@ export default function LayananPage() {
             {services.map((svc: any) => (
               <div key={svc.id} className="space-y-6">
                 <div className="flex items-center gap-3 pb-2 border-b border-slate-200">
-                  <ShieldAlert className="h-6 w-6 text-primary" />
+                  {svc.icon === "Cloud" ? <Cloud className="h-6 w-6 text-primary" /> : <ShieldAlert className="h-6 w-6 text-primary" />}
                   <div>
                     <h2 className="text-xl font-bold text-slate-800">{svc.nameId}</h2>
                     <p className="text-sm text-slate-500">{svc.descriptionId}</p>

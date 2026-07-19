@@ -16,7 +16,7 @@ app.get("/", async (c) => {
       slug: "hapus-malware",
       descriptionId: "Pembersihan total website dari malware dan iklan judi online dengan garansi.",
       descriptionEn: "Complete website cleanup from malware and gambling ads with warranty.",
-      icon: "ShieldAlert",
+      icon: "Cloud",
       isActive: true,
     })
     .onConflictDoNothing({ target: services.slug })

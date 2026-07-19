@@ -4,7 +4,6 @@ import { transactions, packages, users } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { getPaymentConfig } from "./admin-settings.js";
 import { markTransactionPaid, generateTransactionId } from "../lib/transactions.js";
-import { sendFonnteMessage } from "../lib/fonnte.js";
 
 const app = new Hono();
 
@@ -257,43 +256,12 @@ app.patch("/:id/confirm", async (c) => {
 
   const result = await markTransactionPaid(id);
 
-  if (result.kind === "not_found") {
-    return c.json({ error: "Not found" }, 404);
-  }
-  if (result.kind === "paid") {
-    return c.json({ error: "Already paid", transaction: result.transaction, subscription: result.subscription }, 409);
+  if (result.status === "not_found") {
+    return c.json({ error: "Transaksi tidak ditemukan atau sudah diproses" }, 404);
   }
 
-  // Notifikasi WA (dengan config dari DB)
-  const cfg = await getPaymentConfig();
-  const fonnteToken = cfg.fonnteToken || "";
-  const adminWa = cfg.adminWhatsApp || "";
-  const trx = result.transaction;
-  const amountFmt = (trx.amount + (trx.fee || 0)).toLocaleString("id-ID");
-  const serviceName = trx.package?.service?.nameId || "-";
-  const packageName = trx.package?.nameId || "-";
-  const customerName = trx.user?.name || "Pelanggan";
-  const customerWa = trx.user?.whatsapp;
-
-  // Notif ke Admin
-  if (adminWa) {
-    sendFonnteMessage(
-      adminWa,
-      `✅ *PESANAN BARU LUNAS (Dikonfirmasi Manual)*\n\nPelanggan: ${customerName}\nLayanan: ${serviceName}\nPaket: ${packageName}\nNominal: Rp ${amountFmt}\n\nPesanan telah diverifikasi admin.`,
-      fonnteToken
-    );
-  }
-
-  // Notif ke Pelanggan
-  if (customerWa) {
-    sendFonnteMessage(
-      customerWa,
-      `Halo ${customerName}!\n\nTerima kasih, pembayaran Anda sebesar *Rp ${amountFmt}* untuk layanan *${serviceName}* (${packageName}) telah berhasil kami verifikasi.\n\nTim kami akan segera memproses pesanan Anda. Kami akan menghubungi Anda jika ada informasi tambahan yang diperlukan.`,
-      fonnteToken
-    );
-  }
-
-  return c.json({ transaction: result.transaction, subscription: result.subscription });
+  // Subscription/garansi diaktifkan manual oleh admin.
+  return c.json({ status: "confirmed" });
 });
 
 export default app;

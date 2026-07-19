@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { db } from "../db/index.js";
 import { users, transactions, subscriptions, services, packages } from "../db/schema.js";
 import { count, eq } from "drizzle-orm";
+import { activateSubscription } from "../lib/transactions.js";
 
 const app = new Hono();
 
@@ -42,6 +43,29 @@ app.get("/users", async (c) => {
     orderBy: (u, { desc }) => [desc(u.createdAt)],
   });
   return c.json(rows);
+});
+
+// GET /api/admin/users/:id — detail user + transaksi + subscription
+app.get("/users/:id", async (c) => {
+  const id = c.req.param("id");
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, id),
+  });
+  if (!user) return c.json({ error: "User not found" }, 404);
+
+  const trxList = await db.query.transactions.findMany({
+    where: eq(transactions.userId, id),
+    with: { package: { with: { service: true } } },
+    orderBy: (t, { desc }) => [desc(t.createdAt)],
+  });
+
+  const subList = await db.query.subscriptions.findMany({
+    where: eq(subscriptions.userId, id),
+    with: { package: { with: { service: true } } },
+    orderBy: (s, { desc }) => [desc(s.createdAt)],
+  });
+
+  return c.json({ user, transactions: trxList, subscriptions: subList });
 });
 
 // ============================================================
@@ -300,3 +324,32 @@ app.delete("/packages/:id", async (c) => {
 });
 
 export default app;
+
+// POST /api/admin/activate-subscription — aktivasi garansi manual
+app.post("/activate-subscription", async (c) => {
+  const body = await c.req.json<{ transactionId: string; warrantyDays?: number }>();
+  const { transactionId, warrantyDays } = body;
+
+  if (!transactionId) {
+    return c.json({ error: "transactionId wajib diisi" }, 400);
+  }
+
+  // Ambil transaksi untuk dapat package info
+  const trx = await db.query.transactions.findFirst({
+    where: eq(transactions.id, transactionId),
+    with: { package: true },
+  });
+
+  if (!trx) return c.json({ error: "Transaksi tidak ditemukan" }, 404);
+  if (trx.status !== "paid") return c.json({ error: "Transaksi belum lunas" }, 400);
+
+  const days = warrantyDays ?? (trx.package?.warrantyDays ?? 30);
+
+  const sub = await activateSubscription(transactionId, days);
+
+  if (!sub) {
+    return c.json({ error: "Gagal mengaktifkan garansi. Transaksi mungkin sudah aktif." }, 400);
+  }
+
+  return c.json({ subscription: sub });
+});

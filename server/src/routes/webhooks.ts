@@ -4,7 +4,6 @@ import { transactions } from "../db/schema.js";
 import { and, eq } from "drizzle-orm";
 import { getPaymentConfig } from "./admin-settings.js";
 import { markTransactionPaid } from "../lib/transactions.js";
-import { sendFonnteMessage } from "../lib/fonnte.js";
 
 const app = new Hono();
 
@@ -51,48 +50,16 @@ app.post("/sumopod", async (c) => {
       fee: typeof data.fee === "number" ? data.fee : null,
     });
 
-    if (result.kind === "not_found") {
+    if (result.status === "not_found") {
       console.warn(`[Webhook] Transaction ${trxId} not found in database.`);
       return c.json({ error: "Transaction not found" }, 404);
     }
 
-    if (result.kind === "created") {
-      const trx = result.transaction;
-      const amountFmt = (trx.amount + (trx.fee || 0)).toLocaleString("id-ID");
-      const serviceName = trx.package?.service?.nameId || "-";
-      const packageName = trx.package?.nameId || "-";
-      const customerName = trx.user?.name || "Pelanggan";
-      const customerWa = trx.user?.whatsapp;
-
-      // Ambil token dari DB config (bukan env aja)
-      const cfg = await getPaymentConfig();
-      const fonnteToken = cfg.fonnteToken || "";
-      const adminWa = cfg.adminWhatsApp || "";
-
-      // Notif ke Admin
-      if (adminWa) {
-        sendFonnteMessage(
-          adminWa,
-          `✅ *PESANAN BARU LUNAS (Otomatis QRIS)*\n\nPelanggan: ${customerName}\nLayanan: ${serviceName}\nPaket: ${packageName}\nNominal: Rp ${amountFmt}\n\nSilakan cek dashboard admin untuk menindaklanjuti.`,
-          fonnteToken
-        );
-      }
-
-      // Notif ke Pelanggan
-      if (customerWa) {
-        sendFonnteMessage(
-          customerWa,
-          `Halo ${customerName}!\n\nTerima kasih, pembayaran Anda sebesar *Rp ${amountFmt}* untuk layanan *${serviceName}* (${packageName}) telah berhasil kami terima.\n\nTim kami akan segera memproses pesanan Anda. Kami akan menghubungi Anda jika ada informasi tambahan yang diperlukan.`,
-          fonnteToken
-        );
-      }
-    }
-
-    // Baik "created" maupun "paid" → balas sukses agar gateway berhenti retry.
-    return c.json({ status: result.kind === "created" ? "processed" : "already_paid" }, 200);
+    // Subscription diaktifkan manual oleh admin melalui halaman transaksi.
+    return c.json({ status: "processed" }, 200);
   }
 
-  // Tangani event expired/failed
+  // Tangani event failed/expired
   if ((event_type === "payment.failed" || event_type === "payment.expired") && data?.order_id) {
     const trxId = data.order_id;
     console.log(`[Webhook] Payment ${event_type} for order: ${trxId}`);

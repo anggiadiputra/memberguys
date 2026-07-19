@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard, Package, CreditCard, User, LogOut, Globe,
-  ShoppingCart, Menu, X,
+  Cloud, Menu, X,
 } from "lucide-react";
 import i18n from "@/i18n";
 
@@ -31,7 +31,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
   const navItems = [
     { href: "/dashboard", icon: LayoutDashboard, label: t("Navigation.home") },
-    { href: "/dashboard/layanan", icon: ShoppingCart, label: "Layanan" },
+    { href: "/dashboard/layanan", icon: Cloud, label: "Layanan" },
     { href: "/dashboard/packages", icon: Package, label: t("Navigation.packages") },
     { href: "/dashboard/transactions", icon: CreditCard, label: t("Navigation.transactions") },
     { href: "/dashboard/profile", icon: User, label: t("Navigation.profile") },

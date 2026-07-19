@@ -53,6 +53,7 @@ const DashboardPage = lazy(() => import("@/pages/dashboard/Dashboard"));
 const PackagesPage = lazy(() => import("@/pages/dashboard/Packages"));
 const TransactionsPage = lazy(() => import("@/pages/dashboard/Transactions"));
 const LayananPage = lazy(() => import("@/pages/dashboard/Layanan"));
+const ProfilePage = lazy(() => import("@/pages/dashboard/Profile"));
 
 const PaymentSuccessPage = lazy(() => import("@/pages/payment/Success"));
 const PaymentCancelPage = lazy(() => import("@/pages/payment/Cancel"));
@@ -62,6 +63,7 @@ const AdminSettingsPage = lazy(() => import("@/pages/admin/Settings"));
 const AdminTransactionsPage = lazy(() => import("@/pages/admin/Transactions"));
 const AdminUsersPage = lazy(() => import("@/pages/admin/Users"));
 const AdminPackagesPage = lazy(() => import("@/pages/admin/Packages"));
+const CustomerDetailPage = lazy(() => import("@/pages/admin/CustomerDetail"));
 
 // Komponen fallback selama file JS halaman sedang diunduh
 const PageLoader = () => (
@@ -93,6 +95,7 @@ export default function App() {
             <Route path="/dashboard/layanan" element={<LayananPage />} />
             <Route path="/dashboard/packages" element={<PackagesPage />} />
             <Route path="/dashboard/transactions" element={<TransactionsPage />} />
+            <Route path="/dashboard/profile" element={<ProfilePage />} />
             <Route path="/payment/success" element={<PaymentSuccessPage />} />
             <Route path="/payment/cancel" element={<PaymentCancelPage />} />
           </Route>
@@ -102,6 +105,7 @@ export default function App() {
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/admin/transactions" element={<AdminTransactionsPage />} />
             <Route path="/admin/users" element={<AdminUsersPage />} />
+            <Route path="/admin/users/:id" element={<CustomerDetailPage />} />
             <Route path="/admin/packages" element={<AdminPackagesPage />} />
             <Route path="/admin/settings" element={<AdminSettingsPage />} />
           </Route>
