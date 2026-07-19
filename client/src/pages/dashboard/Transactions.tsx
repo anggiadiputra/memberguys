@@ -102,67 +102,80 @@ export default function TransactionsPage() {
 
         {/* Modal Invoice Digital */}
         <Dialog open={invoiceOpen} onOpenChange={setInvoiceOpen}>
-          <DialogContent className="max-w-md print:max-w-none print:m-0 print:shadow-none print:border-none p-0 overflow-hidden">
-            <div className="bg-slate-900 p-6 text-white print:bg-white print:text-black print:p-0 print:mb-6">
-              <h2 className="text-2xl font-black tracking-tight">INVOICE</h2>
-              <p className="text-slate-400 text-sm print:text-slate-500 font-mono mt-1">{selectedInvoice?.id}</p>
-            </div>
-            
-            <div className="p-6 space-y-6">
-              <div className="flex justify-between items-start text-sm">
+          <DialogContent className="sm:max-w-[420px] print:max-w-none print:m-0 print:shadow-none print:border-none p-0 overflow-hidden rounded-md border-slate-200">
+            {/* Header Invoice */}
+            <div className="bg-slate-50 px-6 py-5 border-b border-slate-200 print:bg-white print:border-b-2 print:border-slate-800 print:px-0">
+              <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-muted-foreground mb-1">Diterbitkan Untuk:</p>
-                  <p className="font-bold">{user?.name || "Pelanggan"}</p>
-                  <p className="text-muted-foreground">{user?.email}</p>
+                  <h2 className="text-xl font-bold tracking-tight text-slate-900">INVOICE</h2>
+                  <p className="text-xs text-muted-foreground font-mono mt-0.5">{selectedInvoice?.id}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-muted-foreground mb-1">Tanggal Bayar:</p>
-                  <p className="font-semibold">
+                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 uppercase text-[10px] tracking-wider font-bold rounded-sm print:border-black print:text-black">
+                    LUNAS
+                  </Badge>
+                </div>
+              </div>
+            </div>
+            
+            <div className="px-6 py-5 space-y-6 print:px-0">
+              {/* Info Pelanggan & Tanggal */}
+              <div className="flex justify-between text-sm">
+                <div className="space-y-1">
+                  <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold">Dibayar Oleh</p>
+                  <p className="font-medium text-slate-800 leading-tight">{user?.name || "Pelanggan"}</p>
+                  <p className="text-slate-500 text-xs">{user?.email}</p>
+                </div>
+                <div className="space-y-1 text-right">
+                  <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold">Tanggal</p>
+                  <p className="font-medium text-slate-800 text-sm">
                     {selectedInvoice?.paidAt 
-                      ? new Date(selectedInvoice.paidAt).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' })
+                      ? new Date(selectedInvoice.paidAt).toLocaleDateString("id-ID", { day: '2-digit', month: 'short', year: 'numeric' })
                       : new Date().toLocaleDateString("id-ID")}
                   </p>
                 </div>
               </div>
 
-              <div className="border rounded-lg overflow-hidden">
+              {/* Tabel Rincian */}
+              <div className="border border-slate-200 rounded-md overflow-hidden">
                 <table className="w-full text-sm">
-                  <thead className="bg-slate-50 border-b">
+                  <thead className="bg-slate-50/50 border-b border-slate-200">
                     <tr>
-                      <th className="text-left p-3 font-semibold">Deskripsi Layanan</th>
-                      <th className="text-right p-3 font-semibold">Total</th>
+                      <th className="text-left px-4 py-2 text-[11px] uppercase tracking-wider text-muted-foreground font-medium">Layanan</th>
+                      <th className="text-right px-4 py-2 text-[11px] uppercase tracking-wider text-muted-foreground font-medium">Jumlah</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-slate-100">
                     <tr>
-                      <td className="p-3">
-                        <p className="font-bold text-slate-800">{selectedInvoice?.package?.service?.nameId}</p>
-                        <p className="text-muted-foreground mt-0.5">{selectedInvoice?.package?.nameId}</p>
+                      <td className="px-4 py-3">
+                        <p className="font-semibold text-slate-800 text-[13px]">{selectedInvoice?.package?.service?.nameId}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{selectedInvoice?.package?.nameId}</p>
                       </td>
-                      <td className="p-3 text-right font-medium">
+                      <td className="px-4 py-3 text-right font-semibold text-slate-800 text-[13px] align-top">
                         Rp {selectedInvoice?.amount?.toLocaleString("id-ID")}
                       </td>
                     </tr>
                   </tbody>
+                  <tfoot className="bg-slate-50/80 border-t border-slate-200">
+                    <tr>
+                      <td className="px-4 py-3 text-right font-medium text-xs text-slate-600">Total Pembayaran</td>
+                      <td className="px-4 py-3 text-right font-bold text-base text-slate-900">
+                        Rp {selectedInvoice?.amount?.toLocaleString("id-ID")}
+                      </td>
+                    </tr>
+                  </tfoot>
                 </table>
               </div>
-
-              <div className="flex justify-between items-center bg-slate-50 p-4 rounded-lg border">
-                <span className="font-bold text-slate-700">Total Dibayar</span>
-                <span className="font-black text-xl text-primary">
-                  Rp {selectedInvoice?.amount?.toLocaleString("id-ID")}
-                </span>
-              </div>
               
-              <div className="text-center">
-                <Badge variant="default" className="bg-green-500 hover:bg-green-500/90 print:border-black print:text-black">LUNAS (PAID)</Badge>
-                <p className="text-xs text-muted-foreground mt-2 font-mono">Ref: {selectedInvoice?.externalRefId || "Manual"}</p>
+              <div className="text-center pt-2">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Metode: {selectedInvoice?.paymentMethod} &bull; Ref: {selectedInvoice?.externalRefId || "-"}</p>
+                <p className="text-[10px] text-slate-400 mt-1">Terima kasih atas kepercayaan Anda.</p>
               </div>
             </div>
 
-            <div className="p-4 border-t bg-slate-50 flex justify-end print:hidden">
-              <Button onClick={handlePrint} className="gap-2">
-                <Printer className="w-4 h-4" /> Cetak / Simpan PDF
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end print:hidden">
+              <Button onClick={handlePrint} size="sm" variant="outline" className="gap-2 text-xs h-8 rounded-md bg-white">
+                <Printer className="w-3.5 h-3.5" /> Cetak PDF
               </Button>
             </div>
           </DialogContent>
