@@ -77,7 +77,7 @@ export const packages = pgTable("packages", {
 });
 
 export const transactions = pgTable("transactions", {
-  id: uuid("id").defaultRandom().primaryKey(),
+  id: text("id").primaryKey(), // Ganti dari uuid ke text agar bisa menampung format TRX-...
   userId: text("user_id").notNull().references(() => users.id),
   packageId: uuid("package_id").notNull().references(() => packages.id),
   amount: integer("amount").notNull(),
@@ -93,7 +93,7 @@ export const subscriptions = pgTable("subscriptions", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: text("user_id").notNull().references(() => users.id),
   packageId: uuid("package_id").notNull().references(() => packages.id),
-  transactionId: uuid("transaction_id").references(() => transactions.id),
+  transactionId: text("transaction_id").references(() => transactions.id), // Sesuaikan referensi menjadi text
   status: text("status").default("active").notNull(), // active | expired
   startsAt: timestamp("starts_at").defaultNow().notNull(),
   warrantyEndsAt: timestamp("warranty_ends_at").notNull(),
