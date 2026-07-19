@@ -14,6 +14,7 @@ import adminRoutes from "./routes/admin.js";
 import adminSettingsRoutes from "./routes/admin-settings.js";
 import usersRoutes from "./routes/users.js";
 import webhooksRoutes from "./routes/webhooks.js";
+import seedRoutes from "./routes/seed.js";
 
 const app = new Hono();
 
@@ -27,6 +28,9 @@ app.use(
 );
 
 app.get("/api/health", (c) => c.json({ status: "ok" }));
+
+// Route sementara untuk mengisi database
+app.route("/api/seed", seedRoutes);
 
 // Webhook routes
 app.route("/api/webhooks", webhooksRoutes);

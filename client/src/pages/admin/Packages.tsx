@@ -4,20 +4,36 @@ import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CheckCircle2, Plus } from "lucide-react";
+import { CheckCircle2, Plus, Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export default function AdminPackagesPage() {
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Services adalah public endpoint (tidak butuh header admin untuk GET)
+  const loadData = () => {
     api.get<any[]>(`/services`)
       .then(setServices)
       .catch(console.error)
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
+
+  const handleSeed = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get<any>("/seed");
+      toast.success(res.message);
+      loadData();
+    } catch (e: any) {
+      toast.error("Gagal melakukan seed: " + e.message);
+      setLoading(false);
+    }
+  };
 
   return (
     <AdminLayout>
@@ -35,9 +51,11 @@ export default function AdminPackagesPage() {
           </div>
         ) : services.length === 0 ? (
           <Card>
-            <CardContent className="py-16 text-center text-muted-foreground">
-              Belum ada layanan yang ditambahkan ke database. <br />
-              (Saat ini Anda harus menambahkan layanan secara manual melalui Drizzle Studio)
+            <CardContent className="py-16 text-center text-muted-foreground flex flex-col items-center gap-4">
+              <p>Belum ada layanan yang ditambahkan ke database.</p>
+              <Button onClick={handleSeed} variant="outline" className="gap-2">
+                <Database className="w-4 h-4" /> Masukkan Data Demo Hapus Malware
+              </Button>
             </CardContent>
           </Card>
         ) : (
