@@ -13,7 +13,8 @@ export default function AdminPage() {
   const [stats, setStats] = useState<any>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const { data: session } = authClient.useSession();
+  const user = session?.user as any;
 
   const loadData = async (adminId: string) => {
     // Ubah pemanggilan menjadi sequential (berurutan) agar tidak terjadi 
@@ -26,14 +27,12 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    authClient.getSession().then(({ data }) => {
-      if (!data?.user) return;
-      setUser(data.user);
-      loadData(data.user.id).catch(e => {
+    if (user?.id) {
+      loadData(user.id).catch(e => {
         toast.error(e.message || "Gagal memuat data admin");
       }).finally(() => setLoading(false));
-    });
-  }, []);
+    }
+  }, [user?.id]);
 
   const confirmPayment = async (trxId: string) => {
     try {
