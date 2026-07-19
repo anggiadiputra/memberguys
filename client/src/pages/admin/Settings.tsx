@@ -8,7 +8,110 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Save, TestTube2, CircleCheck, CircleX, ExternalLink, Eye, EyeOff } from "lucide-react";
+import { Save, TestTube2, CircleCheck, CircleX, ExternalLink, Eye, EyeOff, GripVertical, Plus, Trash2, ChevronUp, ChevronDown } from "lucide-react";
+
+interface BankAccount {
+  bankName: string;
+  accountNumber: string;
+  accountHolder: string;
+}
+
+function BankAccountRow({ index, account, onChange, onDelete, onMoveUp, onMoveDown, isFirst, isLast }: {
+  index: number;
+  account: BankAccount;
+  onChange: (a: BankAccount) => void;
+  onDelete: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  isFirst: boolean;
+  isLast: boolean;
+}) {
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+
+  const handleDragStart = (e: React.DragEvent) => {
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", String(index));
+    setDragIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const from = Number(e.dataTransfer.getData("text/plain"));
+    if (from !== index) {
+      const parentEl = document.querySelector("[data-bank-list]");
+      if (parentEl) {
+        const event = new CustomEvent("bank-reorder", { detail: { from, to: index } });
+        parentEl.dispatchEvent(event);
+      }
+    }
+    setDragIndex(null);
+  };
+
+  return (
+    <div
+      draggable
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+      onDragEnd={() => setDragIndex(null)}
+      className={`flex items-start gap-2 p-3 rounded-lg border bg-white/80 transition-all ${
+        dragIndex === index ? "opacity-40 ring-2 ring-primary/30" : ""
+      }`}
+    >
+      <div className="pt-1.5 cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-500 touch-none">
+        <GripVertical className="w-4 h-4" />
+      </div>
+
+      <div className="flex-1 grid grid-cols-3 gap-2 text-xs">
+        <div className="space-y-1">
+          <span className="text-muted-foreground">Bank</span>
+          <Input
+            value={account.bankName}
+            onChange={(e) => onChange({ ...account, bankName: e.target.value })}
+            placeholder="BCA"
+            className="h-8 text-xs"
+          />
+        </div>
+        <div className="space-y-1">
+          <span className="text-muted-foreground">No. Rekening</span>
+          <Input
+            value={account.accountNumber}
+            onChange={(e) => onChange({ ...account, accountNumber: e.target.value })}
+            placeholder="1234567890"
+            className="h-8 text-xs"
+          />
+        </div>
+        <div className="space-y-1">
+          <span className="text-muted-foreground">A/N</span>
+          <Input
+            value={account.accountHolder}
+            onChange={(e) => onChange({ ...account, accountHolder: e.target.value })}
+            placeholder="PT MemberGuys"
+            className="h-8 text-xs"
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-0.5 pt-1">
+        <button type="button" disabled={isFirst} onClick={onMoveUp} className="h-5 w-5 flex items-center justify-center text-slate-400 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed">
+          <ChevronUp className="w-3.5 h-3.5" />
+        </button>
+        <button type="button" disabled={isLast} onClick={onMoveDown} className="h-5 w-5 flex items-center justify-center text-slate-400 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed">
+          <ChevronDown className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
+      <button type="button" onClick={onDelete} className="pt-1.5 text-slate-400 hover:text-red-500 transition-colors">
+        <Trash2 className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  );
+}
 
 export default function AdminSettingsPage() {
   const [adminId, setAdminId] = useState<string>("");
@@ -24,10 +127,17 @@ export default function AdminSettingsPage() {
   const [cancelUrl, setCancelUrl] = useState("");
   const [isSandbox, setIsSandbox] = useState(true);
 
+  // Manual Payment config
+  const [manualPaymentEnabled, setManualPaymentEnabled] = useState(false);
+  const [bankAccounts, setBankAccounts] = useState<{bankName: string; accountNumber: string; accountHolder: string}[]>([]);
+  const [fonnteToken, setFonnteToken] = useState("");
+  const [adminWhatsApp, setAdminWhatsApp] = useState("");
+
   // Toggle visibility
   const [showApi, setShowApi] = useState(false);
   const [showWebToken, setShowWebToken] = useState(false);
   const [showWebSecret, setShowWebSecret] = useState(false);
+  const [showFonnte, setShowFonnte] = useState(false);
 
   useEffect(() => {
     authClient.getSession().then(({ data }) => {
@@ -44,8 +154,29 @@ export default function AdminSettingsPage() {
         setSuccessUrl(cfg.successUrl || "");
         setCancelUrl(cfg.cancelUrl || "");
         setIsSandbox(cfg.isSandbox ?? true);
+        setManualPaymentEnabled(cfg.manualPaymentEnabled ?? false);
+        setBankAccounts(cfg.bankAccounts || []);
+        setFonnteToken(cfg.fonnteToken || "");
+        setAdminWhatsApp(cfg.adminWhatsApp || "");
       }).catch(() => {});
     });
+  }, []);
+
+  // Drag reorder listener untuk bank accounts
+  useEffect(() => {
+    const el = document.querySelector("[data-bank-list]");
+    if (!el) return;
+    const handler = (e: Event) => {
+      const { from, to } = (e as CustomEvent).detail;
+      setBankAccounts((prev) => {
+        const copy = [...prev];
+        const [moved] = copy.splice(from, 1);
+        copy.splice(to, 0, moved);
+        return copy;
+      });
+    };
+    el.addEventListener("bank-reorder", handler);
+    return () => el.removeEventListener("bank-reorder", handler);
   }, []);
 
   const onSave = async () => {
@@ -53,6 +184,7 @@ export default function AdminSettingsPage() {
     try {
       await api.post("/admin/settings/payment", {
         apiKey, webhookSecret, webhookToken, successUrl, cancelUrl, isSandbox,
+        manualPaymentEnabled, bankAccounts, fonnteToken, adminWhatsApp,
       }, { headers: { "X-Admin-Id": adminId } });
       toast.success("Konfigurasi berhasil disimpan");
     } catch (e: any) {
@@ -264,7 +396,110 @@ export default function AdminSettingsPage() {
               </div>
             </div>
 
-            {/* Actions */}
+          {/* ── Integrasi Fonnte WA ── */}
+          <div className="border-t pt-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-semibold">Notifikasi WhatsApp (Fonnte)</h4>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Notifikasi WA ke admin & pelanggan saat pembayaran lunas.
+                </p>
+              </div>
+            </div>
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="fonnteToken">Fonnte API Token</Label>
+                <div className="relative">
+                  <Input
+                    id="fonnteToken"
+                    type={showFonnte ? "text" : "password"}
+                    placeholder="Masukkan token API Fonnte"
+                    value={fonnteToken}
+                    onChange={(e) => setFonnteToken(e.target.value)}
+                    className="h-9 pr-9"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowFonnte(!showFonnte)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showFonnte ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Dapatkan di <a href="https://fonnte.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary">dashboard Fonnte</a> → Settings → API Key
+                </p>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="adminWhatsApp">Nomor WhatsApp Admin</Label>
+                <Input
+                  id="adminWhatsApp"
+                  placeholder="6281234567890"
+                  value={adminWhatsApp}
+                  onChange={(e) => setAdminWhatsApp(e.target.value)}
+                  className="h-9"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Nomor tujuan notifikasi pesanan masuk. Format: 628xxxxxxxxxx (tanpa + dan spasi).
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Integrasi Manual Payment (existing) ── */}
+          <div className="border-t pt-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Rekening Tujuan</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-1 h-8 text-xs"
+                    onClick={() => setBankAccounts([...bankAccounts, { bankName: "", accountNumber: "", accountHolder: "" }])}
+                  >
+                    <Plus className="h-3 w-3" /> Tambah Rekening
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground -mt-1">
+                  Drag untuk mengatur urutan. Pelanggan akan melihat urutan ini saat checkout.
+                </p>
+                <div className="space-y-2" data-bank-list>
+                  {bankAccounts.map((acc, i) => (
+                    <BankAccountRow
+                      key={i}
+                      index={i}
+                      account={acc}
+                      onChange={(updated) => {
+                        const copy = [...bankAccounts];
+                        copy[i] = updated;
+                        setBankAccounts(copy);
+                      }}
+                      onDelete={() => setBankAccounts(bankAccounts.filter((_, j) => j !== i))}
+                      onMoveUp={() => {
+                        if (i === 0) return;
+                        const copy = [...bankAccounts];
+                        [copy[i - 1], copy[i]] = [copy[i], copy[i - 1]];
+                        setBankAccounts(copy);
+                      }}
+                      onMoveDown={() => {
+                        if (i === bankAccounts.length - 1) return;
+                        const copy = [...bankAccounts];
+                        [copy[i], copy[i + 1]] = [copy[i + 1], copy[i]];
+                        setBankAccounts(copy);
+                      }}
+                      isFirst={i === 0}
+                      isLast={i === bankAccounts.length - 1}
+                    />
+                  ))}
+                  {bankAccounts.length === 0 && (
+                    <p className="text-xs text-muted-foreground italic px-1">
+                      Belum ada rekening. Klik "Tambah Rekening" untuk menambahkan.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+          {/* Actions */}
             <div className="flex items-center gap-3 pt-2">
               <Button onClick={onSave} disabled={saving} className="gap-2">
                 <Save className="h-4 w-4" />

@@ -1,11 +1,134 @@
 import { Hono } from "hono";
 import { db } from "../db/index.js";
-import { transactions, subscriptions, packages } from "../db/schema.js";
+import { transactions, packages, users } from "../db/schema.js";
 import { eq } from "drizzle-orm";
-import { addDays } from "date-fns";
 import { getPaymentConfig } from "./admin-settings.js";
+import { markTransactionPaid, generateTransactionId } from "../lib/transactions.js";
+import { sendFonnteMessage } from "../lib/fonnte.js";
 
 const app = new Hono();
+
+// ─── Helper: Panggil SumoPod API ─────────────────────────
+// Mengembalikan { fee, paymentUrl, externalRefId } atau throw.
+// Tidak menyentuh database — murni komunikasi dengan SumoPod.
+// method: "qris" (via SumoPod) atau "manual" (via WhatsApp, tanpa fee)
+async function callSumoPod(
+  transactionId: string,
+  amount: number,
+  method: "qris" | "manual" = "qris"
+): Promise<{
+  fee: number | null;
+  totalAmount: number;
+  paymentUrl: string;
+  externalRefId: string | null;
+}> {
+  const paymentConfig = await getPaymentConfig();
+
+  // Manual payment — tanpa redirect ke payment gateway
+  if (method === "manual") {
+    return {
+      fee: 0,
+      totalAmount: amount,
+      paymentUrl: "",
+      externalRefId: null,
+    };
+  }
+
+  console.log("[SumoPod Debug] Config Status:", {
+    hasApiKey: !!paymentConfig.apiKey,
+    apiKeyLength: paymentConfig.apiKey?.length || 0,
+    isSandbox: paymentConfig.isSandbox,
+  });
+
+  if (!paymentConfig.apiKey) {
+    throw new Error("SumoPod API Key belum dikonfigurasi admin. Pilih metode Manual atau hubungi admin.");
+  }
+
+  const baseUrl = paymentConfig.isSandbox
+    ? "https://api-pay-sandbox.sumopod.com"
+    : "https://api-pay.sumopod.com";
+
+  const envHost = process.env.CLIENT_URL || "http://localhost:5173";
+  const host = envHost.startsWith("http://localhost")
+    ? "https://localhost.app.ekstensi.id"
+    : envHost;
+
+  const successUrl = paymentConfig.successUrl || `${host}/payment/success?order_id=${transactionId}`;
+  const cancelUrl = paymentConfig.cancelUrl || `${host}/payment/cancel?order_id=${transactionId}`;
+
+  const sumopodPayload = {
+    order_id: transactionId,
+    amount,
+    currency: "IDR",
+    expires_in_hours: 24,
+    success_return_url: successUrl,
+    cancel_return_url: cancelUrl,
+    payment_method_type_code: "QRIS",
+  };
+
+  console.log("[SumoPod Debug] Payload:", sumopodPayload);
+
+  const res = await fetch(`${baseUrl}/api/v1/payments`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Api-Key": paymentConfig.apiKey,
+    },
+    body: JSON.stringify(sumopodPayload),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.text();
+    console.error(`[SumoPod Error] ${res.status}: ${errorData}`);
+    throw new Error(`SumoPod menolak pembayaran: ${res.statusText}`);
+  }
+
+  const sumopodData = await res.json();
+  console.log("[SumoPod Debug] Response:", sumopodData);
+
+  const fee = typeof sumopodData.fee === "number" ? sumopodData.fee : null;
+  return {
+    fee,
+    totalAmount: fee != null ? amount + fee : amount,
+    paymentUrl: sumopodData.payment_link_url,
+    externalRefId: sumopodData.payment_id,
+  };
+}
+
+// ─── Helper: Get or Create Shadow User ───────────────────
+// Jika email sudah ada, kembalikan ID-nya (dan update WA jika belum ada/berbeda).
+// Jika belum ada, buat shadow user (guest).
+async function getOrCreateUser(name: string, email: string, whatsapp: string): Promise<string> {
+  const existing = await db.query.users.findFirst({
+    where: eq(users.email, email),
+  });
+
+  if (existing) {
+    // Update WA jika diperlukan, ignore error
+    if (whatsapp && existing.whatsapp !== whatsapp) {
+      await db.update(users).set({ whatsapp }).where(eq(users.id, existing.id));
+    }
+    return existing.id;
+  }
+
+  // Buat Shadow User (Guest)
+  const newId = `guest-${crypto.randomUUID()}`;
+  const now = new Date();
+  await db.insert(users).values({
+    id: newId,
+    name,
+    email,
+    whatsapp,
+    emailVerified: false,
+    role: "user",
+    createdAt: now,
+    updatedAt: now,
+  });
+
+  return newId;
+}
+
+// ─── Routes ──────────────────────────────────────────────
 
 // GET /api/transactions?userId=xxx — riwayat transaksi user
 app.get("/", async (c) => {
@@ -20,127 +143,157 @@ app.get("/", async (c) => {
   return c.json(rows);
 });
 
-// POST /api/transactions — buat transaksi baru
-app.post("/", async (c) => {
-  const body = await c.req.json<{ userId: string; packageId: string }>();
-  const { userId, packageId } = body;
+// POST /api/checkout — hitung fee & dapatkan payment link (TANPA insert DB)
+// Frontend panggil ini dulu → tampilkan modal fee breakdown → user konfirmasi
+app.post("/checkout", async (c) => {
+  const body = await c.req.json<{ 
+    packageId: string; 
+    method?: "qris" | "manual";
+    name?: string;
+    email?: string;
+    whatsapp?: string;
+  }>();
+  const { packageId, method, name, email, whatsapp } = body;
+
+  if (!packageId) {
+    return c.json({ error: "packageId wajib diisi" }, 400);
+  }
+  if (!name || !email || !whatsapp) {
+    return c.json({ error: "Nama, email, dan WhatsApp wajib diisi" }, 400);
+  }
 
   const pkg = await db.query.packages.findFirst({
     where: eq(packages.id, packageId),
   });
   if (!pkg) return c.json({ error: "Package not found" }, 404);
 
-  const transactionId = `TRX-${Date.now()}`;
-  let paymentUrl = "";
-  let externalRefId = null;
+  const transactionId = generateTransactionId();
 
-  const paymentConfig = await getPaymentConfig();
+  const { fee, totalAmount, paymentUrl, externalRefId } = await callSumoPod(transactionId, pkg.price, method || "qris");
 
-  // Jika API Key SumoPod dikonfigurasi, gunakan API SumoPod asli
-  if (paymentConfig.apiKey) {
-    const baseUrl = paymentConfig.isSandbox
-      ? "https://api-pay-sandbox.sumopod.com"
-      : "https://api-pay.sumopod.com";
-      
-    // Pakai fallback hardcode host jika admin belum setup success URL
-    const host = process.env.CLIENT_URL || "http://localhost:5173";
-    const successUrl = paymentConfig.successUrl || `${host}/payment/success?order_id=${transactionId}`;
-    const cancelUrl = paymentConfig.cancelUrl || `${host}/payment/cancel?order_id=${transactionId}`;
+  // Ambil konfigurasi payment untuk kasih tau frontend metode apa saja yang tersedia
+  const paymentCfg = await getPaymentConfig();
 
-    try {
-      const sumopodPayload = {
-        order_id: transactionId,
-        amount: pkg.price,
-        currency: "IDR",
-        expires_in_hours: 24,
-        success_return_url: successUrl,
-        cancel_return_url: cancelUrl,
-        payment_method_type_code: "QRIS", // Default QRIS SumoPod
-      };
+  // paymentMethod untuk disimpan di DB dan ditampilkan di invoice
+  const checkoutPaymentMethod = method === "manual" ? "manual" : "qris";
 
-      const res = await fetch(`${baseUrl}/api/v1/payments`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Api-Key": paymentConfig.apiKey,
-        },
-        body: JSON.stringify(sumopodPayload),
-      });
+  return c.json({
+    transactionId,
+    amount: pkg.price,
+    fee,
+    totalAmount,
+    paymentUrl,
+    externalRefId,
+    paymentMethod: checkoutPaymentMethod,
+    manualPaymentEnabled: paymentCfg.manualPaymentEnabled,
+    bankAccounts: paymentCfg.bankAccounts || [],
+  });
+});
 
-      if (!res.ok) {
-        const errorData = await res.text();
-        console.error("[SumoPod Error Response]:", errorData);
-        throw new Error(`SumoPod menolak pembayaran: ${res.statusText}`);
-      }
+// POST /api/transactions — buat transaksi baru
+app.post("/", async (c) => {
+  const body = await c.req.json<{
+    packageId: string;
+    method?: "qris" | "manual";
+    name: string;
+    email: string;
+    whatsapp: string;
+    paymentUrl?: string;
+    externalRefId?: string | null;
+    fee?: number | null;
+  }>();
+  const { packageId, method, name, email, whatsapp, paymentUrl: existingPaymentUrl, externalRefId: existingExternalRefId, fee: existingFee } = body;
 
-      const sumopodData = await res.json();
-      paymentUrl = sumopodData.payment_link_url;
-      externalRefId = sumopodData.payment_id;
-      
-    } catch (err: any) {
-      console.error("[SumoPod] Create payment error:", err.message);
-      return c.json({ error: "Gagal membuat invoice di SumoPod. Pastikan API Key valid dan konfigurasi benar." }, 502);
-    }
-  } else {
-    // Fallback: Jika SumoPod belum dikonfigurasi admin, fallback ke WhatsApp manual payment
-    const waNumber = process.env.WHATSAPP_NUMBER || "6281234567890";
-    const text = encodeURIComponent(
-      `Halo, saya ingin membayar pesanan ${transactionId} sebesar Rp${pkg.price.toLocaleString("id-ID")}.`
-    );
-    paymentUrl = `https://wa.me/${waNumber}?text=${text}`;
+  if (!packageId || !name || !email || !whatsapp) {
+    return c.json({ error: "Data pelanggan dan paket wajib diisi" }, 400);
   }
+
+  // Shadow User / Guest Checkout logic
+  const resolvedUserId = await getOrCreateUser(name, email, whatsapp);
+
+  const pkg = await db.query.packages.findFirst({
+    where: eq(packages.id, packageId),
+  });
+  if (!pkg) return c.json({ error: "Package not found" }, 404);
+
+  // Generate ID
+  const transactionId = generateTransactionId();
+
+  let paymentUrl = existingPaymentUrl || "";
+  let externalRefId = existingExternalRefId ?? null;
+  let fee = existingFee !== undefined ? existingFee : null;
+
+  // Jika belum ada data (langsung tanpa /checkout), panggil helper
+  if (!paymentUrl) {
+    const sumoRes = await callSumoPod(transactionId, pkg.price, method || "qris");
+    paymentUrl = sumoRes.paymentUrl;
+    externalRefId = sumoRes.externalRefId;
+    fee = sumoRes.fee;
+  }
+
+  const paymentMethod = method === "manual" ? "manual" : (externalRefId ? "qris" : "manual");
 
   const [trx] = await db
     .insert(transactions)
     .values({
       id: transactionId,
-      userId,
+      userId: resolvedUserId,
       packageId,
       amount: pkg.price,
-      paymentMethod: paymentConfig.apiKey ? "qris" : "manual",
+      fee,
+      paymentMethod,
       status: "pending",
       paymentUrl,
       externalRefId,
     })
     .returning();
 
-  return c.json({ transaction: trx, paymentUrl }, 201);
+  return c.json({ transaction: trx, paymentUrl, fee }, 201);
 });
 
 // PATCH /api/transactions/:id/confirm — admin konfirmasi pembayaran (manual)
 app.patch("/:id/confirm", async (c) => {
   const id = c.req.param("id");
 
-  const trx = await db.query.transactions.findFirst({
-    where: eq(transactions.id, id),
-    with: { package: true },
-  });
-  if (!trx) return c.json({ error: "Not found" }, 404);
-  if (trx.status === "paid") return c.json({ error: "Already paid" }, 400);
+  const result = await markTransactionPaid(id);
 
-  const now = new Date();
-  const warrantyEndsAt = addDays(now, trx.package.warrantyDays);
+  if (result.kind === "not_found") {
+    return c.json({ error: "Not found" }, 404);
+  }
+  if (result.kind === "paid") {
+    return c.json({ error: "Already paid", transaction: result.transaction, subscription: result.subscription }, 409);
+  }
 
-  // Update transaksi
-  await db
-    .update(transactions)
-    .set({ status: "paid", paidAt: now })
-    .where(eq(transactions.id, id));
+  // Notifikasi WA (dengan config dari DB)
+  const cfg = await getPaymentConfig();
+  const fonnteToken = cfg.fonnteToken || "";
+  const adminWa = cfg.adminWhatsApp || "";
+  const trx = result.transaction;
+  const amountFmt = (trx.amount + (trx.fee || 0)).toLocaleString("id-ID");
+  const serviceName = trx.package?.service?.nameId || "-";
+  const packageName = trx.package?.nameId || "-";
+  const customerName = trx.user?.name || "Pelanggan";
+  const customerWa = trx.user?.whatsapp;
 
-  // Buat subscription
-  const [sub] = await db
-    .insert(subscriptions)
-    .values({
-      userId: trx.userId,
-      packageId: trx.packageId,
-      transactionId: trx.id,
-      status: "active",
-      startsAt: now,
-      warrantyEndsAt,
-    })
-    .returning();
+  // Notif ke Admin
+  if (adminWa) {
+    sendFonnteMessage(
+      adminWa,
+      `✅ *PESANAN BARU LUNAS (Dikonfirmasi Manual)*\n\nPelanggan: ${customerName}\nLayanan: ${serviceName}\nPaket: ${packageName}\nNominal: Rp ${amountFmt}\n\nPesanan telah diverifikasi admin.`,
+      fonnteToken
+    );
+  }
 
-  return c.json({ transaction: { ...trx, status: "paid" }, subscription: sub });
+  // Notif ke Pelanggan
+  if (customerWa) {
+    sendFonnteMessage(
+      customerWa,
+      `Halo ${customerName}!\n\nTerima kasih, pembayaran Anda sebesar *Rp ${amountFmt}* untuk layanan *${serviceName}* (${packageName}) telah berhasil kami verifikasi.\n\nTim kami akan segera memproses pesanan Anda. Kami akan menghubungi Anda jika ada informasi tambahan yang diperlukan.`,
+      fonnteToken
+    );
+  }
+
+  return c.json({ transaction: result.transaction, subscription: result.subscription });
 });
 
 export default app;

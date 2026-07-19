@@ -43,15 +43,17 @@ app.use("/api/admin/*", async (c, next) => {
   try {
     const user = await db.query.users.findFirst({ where: eq(users.id, adminId) });
     if (!user) return c.json({ error: "Forbidden: User not synced" }, 403);
-    
+    // Validasi murni: hanya user dengan role 'admin' yang boleh lewat.
+    // Promosi admin harus dilakukan manual via SQL/Neon Auth — tidak boleh
+    // otomatis dari header request (sebelumnya rentan race & celah keamanan).
     if (user.role !== "admin") {
-      await db.update(users).set({ role: "admin" }).where(eq(users.id, adminId));
+      return c.json({ error: "Forbidden: Admin access required" }, 403);
     }
   } catch (err: any) {
     console.error("DB Error in admin check:", err.message);
     return c.json({ error: "Internal Server Error during DB check" }, 500);
   }
-  
+
   await next();
 });
 

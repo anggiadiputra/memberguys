@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { db } from "../db/index.js";
 import { users, settings } from "../db/schema.js";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 const app = new Hono();
 
@@ -14,6 +14,14 @@ export async function getPaymentConfig() {
     successUrl: process.env.SUMOPOD_SUCCESS_URL || "",
     cancelUrl: process.env.SUMOPOD_CANCEL_URL || "",
     isSandbox: process.env.SUMOPOD_SANDBOX !== "false",
+    manualPaymentEnabled: false,
+    bankAccounts: [] as Array<{
+      bankName: string;
+      accountNumber: string;
+      accountHolder: string;
+    }>,
+    fonnteToken: process.env.FONNTE_TOKEN || "",
+    adminWhatsApp: process.env.ADMIN_WHATSAPP || "",
   };
 
   try {
@@ -22,13 +30,13 @@ export async function getPaymentConfig() {
     });
 
     if (row && row.value) {
-      return { ...defaultCfg, ...(row.value as any) };
+      return { ...defaultCfg, ...(row.value as any), _version: row.version };
     }
   } catch (e) {
     console.error("Gagal membaca settings dari database:", e);
   }
 
-  return defaultCfg;
+  return { ...defaultCfg, _version: 0 };
 }
 
 app.use("*", async (c, next) => {
@@ -52,6 +60,7 @@ app.get("/payment", async (c) => {
     apiKey: config.apiKey ? "••••" + config.apiKey.slice(-6) : "",
     webhookSecret: config.webhookSecret ? "••••••••" : "",
     webhookToken: config.webhookToken ? "••••••••" : "",
+    fonnteToken: config.fonnteToken ? "••••" + config.fonnteToken.slice(-6) : "",
   });
 });
 
@@ -60,31 +69,71 @@ app.post("/payment", async (c) => {
   const currentConfig = await getPaymentConfig();
 
   // Merge dan pertahankan nilai lama jika frontend mengirim value "••••"
-  const newConfig = { ...currentConfig };
+  const newConfig: any = { ...currentConfig };
+  // _version ditahan di kolom terpisah (settings.version), jangan dibawa ke jsonb.
+  delete newConfig._version;
   if (body.apiKey && !body.apiKey.startsWith("••••")) newConfig.apiKey = body.apiKey;
   if (body.webhookSecret && !body.webhookSecret.startsWith("••••")) newConfig.webhookSecret = body.webhookSecret;
   if (body.webhookToken && !body.webhookToken.startsWith("••••")) newConfig.webhookToken = body.webhookToken;
   if (body.successUrl !== undefined) newConfig.successUrl = body.successUrl;
   if (body.cancelUrl !== undefined) newConfig.cancelUrl = body.cancelUrl;
   if (body.isSandbox !== undefined) newConfig.isSandbox = body.isSandbox;
+  if (body.manualPaymentEnabled !== undefined) newConfig.manualPaymentEnabled = body.manualPaymentEnabled;
+  if (body.bankAccounts !== undefined) newConfig.bankAccounts = body.bankAccounts;
+  if (body.fonnteToken !== undefined) newConfig.fonnteToken = body.fonnteToken.startsWith("••••") ? currentConfig.fonnteToken : body.fonnteToken;
+  if (body.adminWhatsApp !== undefined) newConfig.adminWhatsApp = body.adminWhatsApp;
 
-  // Simpan permanen ke tabel settings (Upsert)
-  await db
-    .insert(settings)
-    .values({
-      key: "payment_gateway",
+  // Optimistic concurrency: klien mengirim _version yang dia baca. Server hanya
+  // menerima write kalau version di DB sama — race antar admin akan ditolak
+  // dengan 409 supaya klien reload & retry. Jika klien tidak mengirim _version
+  // (klien lama), pakai version terbaru yang dibaca server (best-effort compat).
+  const clientVersion = typeof body._version === "number" ? body._version : currentConfig._version;
+  const now = new Date();
+
+  // UPDATE atomik bersyarat: hanya match kalau version di DB masih sama.
+  const updated = await db
+    .update(settings)
+    .set({
       value: newConfig,
-      updatedAt: new Date(),
+      updatedAt: now,
+      version: clientVersion + 1,
     })
-    .onConflictDoUpdate({
-      target: settings.key,
-      set: {
-        value: newConfig,
-        updatedAt: new Date(),
-      },
-    });
+    .where(and(eq(settings.key, "payment_gateway"), eq(settings.version, clientVersion)))
+    .returning();
 
-  return c.json({ status: "saved" });
+  if (updated.length > 0) {
+    return c.json({ status: "saved", _version: updated[0].version });
+  }
+
+  // Tidak ada row yang ter-update. Bedakan: row tidak ada vs version mismatch.
+  const existing = await db.query.settings.findFirst({
+    where: eq(settings.key, "payment_gateway"),
+  });
+
+  if (!existing) {
+    // Row belum ada (first-time setup). Insert atomik; onConflictDoNothing
+    // menangani race kalau admin lain insert tepat sebelum kita.
+    const [row] = await db
+      .insert(settings)
+      .values({
+        key: "payment_gateway",
+        value: newConfig,
+        updatedAt: now,
+        version: 1,
+      })
+      .onConflictDoNothing({ target: settings.key })
+      .returning();
+
+    if (row) return c.json({ status: "saved", _version: row.version });
+
+    return c.json({ error: "Config changed by another session. Please reload and retry.", conflict: true }, 409);
+  }
+
+  // Row ada tapi version berubah → lost-update terdeteksi.
+  return c.json(
+    { error: "Config was modified by another admin. Please reload and retry.", conflict: true, currentVersion: existing.version },
+    409
+  );
 });
 
 app.post("/payment/test", async (c) => {

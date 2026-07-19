@@ -1,5 +1,40 @@
 import "@/i18n";
+import { useEffect } from "react";
+import { authClient } from "@/lib/auth";
 import { Suspense, lazy } from "react";
+
+function SessionSync() {
+  const { refetch } = authClient.useSession();
+
+  useEffect(() => {
+    if (!refetch) return;
+
+    const sync = () => {
+      refetch();
+      let v = 0;
+      try { v = Number(localStorage.getItem("__ss")) || 0; } catch {}
+      localStorage.setItem("__ss", String(v + 1));
+    };
+
+    const onFocus = () => sync();
+    const onVisible = () => { if (document.visibilityState === "visible") sync(); };
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "__ss") sync();
+    };
+
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("storage", onStorage);
+
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, [refetch]);
+
+  return null;
+}
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
@@ -11,9 +46,13 @@ const LandingPage = lazy(() => import("@/pages/Landing"));
 const LoginPage = lazy(() => import("@/pages/auth/Login"));
 const RegisterPage = lazy(() => import("@/pages/auth/Register"));
 
+// Halaman Sales Khusus Layanan
+const MalwareLandingPage = lazy(() => import("@/pages/services/Malware"));
+
 const DashboardPage = lazy(() => import("@/pages/dashboard/Dashboard"));
 const PackagesPage = lazy(() => import("@/pages/dashboard/Packages"));
 const TransactionsPage = lazy(() => import("@/pages/dashboard/Transactions"));
+const LayananPage = lazy(() => import("@/pages/dashboard/Layanan"));
 
 const PaymentSuccessPage = lazy(() => import("@/pages/payment/Success"));
 const PaymentCancelPage = lazy(() => import("@/pages/payment/Cancel"));
@@ -35,6 +74,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Toaster richColors position="top-right" />
+      <SessionSync />
       <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Public Routes with Layout */}
@@ -42,11 +82,15 @@ export default function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            
+            {/* Sales Pages */}
+            <Route path="/layanan/hapus-malware" element={<MalwareLandingPage />} />
           </Route>
 
           {/* Protected – member */}
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/dashboard/layanan" element={<LayananPage />} />
             <Route path="/dashboard/packages" element={<PackagesPage />} />
             <Route path="/dashboard/transactions" element={<TransactionsPage />} />
             <Route path="/payment/success" element={<PaymentSuccessPage />} />

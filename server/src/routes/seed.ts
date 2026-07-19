@@ -1,32 +1,33 @@
 import { Hono } from "hono";
 import { db } from "../db/index.js";
 import { services, packages } from "../db/schema.js";
-import { eq } from "drizzle-orm";
 
 const app = new Hono();
 
 app.get("/", async (c) => {
-  // 1. Cek apakah layanan sudah ada
-  const existing = await db.query.services.findFirst({
-    where: eq(services.slug, "hapus-malware")
-  });
+  // Insert service secara atomik dengan onConflictDoNothing di slug.
+  // Sebelumnya: cek-then-insert bisa race kalau endpoint dipanggil paralel,
+  // menyebabkan unique violation di slug atau data duplikat.
+  const [newService] = await db
+    .insert(services)
+    .values({
+      nameId: "Hapus Malware & Judi Online",
+      nameEn: "Malware & Gambling Ads Removal",
+      slug: "hapus-malware",
+      descriptionId: "Pembersihan total website dari malware dan iklan judi online dengan garansi.",
+      descriptionEn: "Complete website cleanup from malware and gambling ads with warranty.",
+      icon: "ShieldAlert",
+      isActive: true,
+    })
+    .onConflictDoNothing({ target: services.slug })
+    .returning();
 
-  if (existing) {
+  // onConflictDoNothing mengembalikan [] kalau slug sudah ada.
+  if (!newService) {
     return c.json({ message: "Data sudah ada di database." });
   }
 
-  // 2. Buat Layanan Utama (Service)
-  const [newService] = await db.insert(services).values({
-    nameId: "Hapus Malware & Judi Online",
-    nameEn: "Malware & Gambling Ads Removal",
-    slug: "hapus-malware",
-    descriptionId: "Pembersihan total website dari malware dan iklan judi online dengan garansi.",
-    descriptionEn: "Complete website cleanup from malware and gambling ads with warranty.",
-    icon: "ShieldAlert",
-    isActive: true,
-  }).returning();
-
-  // 3. Buat 3 Paket (Packages) yang terhubung dengan Service di atas
+  // Buat 3 Paket yang terhubung dengan Service di atas.
   await db.insert(packages).values([
     {
       serviceId: newService.id,

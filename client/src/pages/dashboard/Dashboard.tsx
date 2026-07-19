@@ -24,6 +24,18 @@ export default function DashboardPage() {
       setUser(data.user);
       const uid = data.user.id;
 
+      // Cek pesanan tertunda (untuk kasus login via Google OAuth)
+      const pendingPkg = sessionStorage.getItem("pending_order_pkg");
+      if (pendingPkg) {
+        api.post<any>("/transactions", { userId: uid, packageId: pendingPkg })
+          .then((res) => {
+            sessionStorage.removeItem("pending_order_pkg");
+            sessionStorage.removeItem("pending_order_url");
+            if (res.paymentUrl) window.location.href = res.paymentUrl;
+          })
+          .catch(() => {});
+      }
+
       // Sync user data to local DB seamlessly
       api.post("/users/sync", data.user).catch(() => {});
 

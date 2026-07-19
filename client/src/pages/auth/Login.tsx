@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { authClient } from "@/lib/auth";
+import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +18,41 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Jika user sudah login (misal dari tab lain), redirect ke dashboard
+  const { data: session } = authClient.useSession();
+  
+  useEffect(() => {
+    if (session?.user) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [session, navigate]);
+
+  // Fungsi untuk melanjutkan pesanan tertunda (jika ada) setelah register/login
+  const processPendingOrder = async (userId: string) => {
+    const pendingPkg = sessionStorage.getItem("pending_order_pkg");
+    if (pendingPkg) {
+      try {
+        toast.info("Memproses pesanan Anda...");
+        const res = await api.post<any>("/transactions", { 
+          userId: userId, 
+          packageId: pendingPkg 
+        });
+        
+        // Bersihkan session storage
+        sessionStorage.removeItem("pending_order_pkg");
+        sessionStorage.removeItem("pending_order_url");
+
+        if (res.paymentUrl) {
+          window.location.href = res.paymentUrl;
+          return true; // Berhasil redirect
+        }
+      } catch (err: any) {
+        toast.error(err.message || "Gagal melanjutkan pesanan");
+      }
+    }
+    return false;
+  };
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -24,10 +60,16 @@ export default function LoginPage() {
       const { error } = await authClient.signIn.email({ email, password });
       if (error) { toast.error(error.message ?? "Login gagal"); return; }
       
-      // Auto-redirect berdasarkan role dari session
       const session = await authClient.getSession();
       const role = (session.data?.user as any)?.role;
       toast.success("Berhasil masuk!");
+
+      // Cek pesanan tertunda
+      if (session?.data?.user?.id) {
+        const redirected = await processPendingOrder(session.data.user.id);
+        if (redirected) return;
+      }
+
       navigate(role === "admin" ? "/admin" : "/dashboard");
     } catch {
       toast.error("Terjadi kesalahan");

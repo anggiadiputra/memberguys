@@ -10,24 +10,28 @@ const SERVICES = [
     icon: Server,
     packages: ["Starter", "Business", "Enterprise"],
     price: "Mulai Rp 250.000",
+    href: "/register",
   },
   {
     key: "malware",
     icon: ShieldAlert,
     packages: ["Scan", "Shield", "Fortress"],
     price: "Mulai Rp 150.000",
+    href: "/layanan/hapus-malware",
   },
   {
     key: "migration",
     icon: ArrowRightLeft,
     packages: ["Basic", "Pro", "Bulk"],
     price: "Mulai Rp 300.000",
+    href: "/register",
   },
   {
     key: "maintenance",
     icon: PenTool,
     packages: ["Light", "Standard", "Premium"],
     price: "Mulai Rp 500.000/bln",
+    href: "/register",
   },
 ];
 
@@ -71,7 +75,7 @@ export default function LandingPage() {
                   ))}
                 </CardContent>
                 <CardFooter>
-                  <Link to="/register" className="w-full">
+                  <Link to={svc.href} className="w-full">
                     <Button className="w-full">{t("Services.order")}</Button>
                   </Link>
                 </CardFooter>

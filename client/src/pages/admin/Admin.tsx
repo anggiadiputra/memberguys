@@ -95,7 +95,7 @@ export default function AdminPage() {
                     <tbody className="divide-y">
                       {transactions.map((tr: any) => (
                         <tr key={tr.id}>
-                          <td className="py-2 font-mono text-xs">{tr.id.slice(0, 12)}…</td>
+                          <td className="py-2 font-mono text-xs max-w-[200px] truncate" title={tr.id}>{tr.id}</td>
                           <td className="py-2">{tr.user?.name ?? tr.userId}</td>
                           <td className="py-2">{tr.package?.nameId ?? "-"}</td>
                           <td className="py-2">Rp {tr.amount.toLocaleString("id-ID")}</td>

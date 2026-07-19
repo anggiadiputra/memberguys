@@ -1,20 +1,31 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { authClient } from "@/lib/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function ProtectedRoute({ adminOnly = false }: { adminOnly?: boolean }) {
-  const [session, setSession] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  // Dengan BetterAuthReactAdapter, authClient sekarang memiliki hooks React
+  // yang reaktif terhadap perubahan state auth antar komponen.
+  const { data: session, isPending, refetch } = authClient.useSession();
 
+  // Cross-tab sync: re-check session saat tab mendapat fokus.
+  // Tanpa ini, user login di tab A → tab B tetap lihat halaman login
+  // karena session hook hanya fetch sekali saat komponen mount.
   useEffect(() => {
-    authClient.getSession().then(({ data }) => {
-      setSession(data);
-      setLoading(false);
-    });
-  }, []);
+    const onFocus = () => refetch?.();
+    // visibilitychange menangkap kasus tab/iOS Safari switch
+    const onVisible = () => { if (document.visibilityState === "visible") refetch?.(); };
 
-  if (loading) {
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [refetch]);
+
+  if (isPending) {
     return (
       <div className="p-8 space-y-4">
         <Skeleton className="h-8 w-48" />
@@ -25,7 +36,7 @@ export function ProtectedRoute({ adminOnly = false }: { adminOnly?: boolean }) {
 
   if (!session) return <Navigate to="/login" replace />;
 
-  if (adminOnly && session.user?.role !== "admin") {
+  if (adminOnly && (session.user as any)?.role !== "admin") {
     return <Navigate to="/dashboard" replace />;
   }
 

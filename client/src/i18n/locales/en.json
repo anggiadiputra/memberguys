@@ -42,5 +42,20 @@
     "maintenance": "Website Maintenance",
     "order": "Order Now",
     "warrantyDays": "{{days}} Days Warranty"
+  },
+  "Invoice": {
+    "title": "INVOICE",
+    "statusPaid": "PAID",
+    "statusPending": "PENDING",
+    "from": "FROM",
+    "to": "TO",
+    "date": "PAYMENT DATE",
+    "service": "SERVICE",
+    "amount": "AMOUNT",
+    "total": "TOTAL PAYMENT",
+    "method": "Method",
+    "ref": "Ref",
+    "thankYou": "Thank you for your trust.",
+    "print": "Print PDF"
   }
 }

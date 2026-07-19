@@ -42,5 +42,20 @@
     "maintenance": "Maintenance Website",
     "order": "Pesan Sekarang",
     "warrantyDays": "Garansi {{days}} Hari"
+  },
+  "Invoice": {
+    "title": "INVOICE",
+    "statusPaid": "LUNAS",
+    "statusPending": "PENDING",
+    "from": "DARI",
+    "to": "KEPADA",
+    "date": "TANGGAL BAYAR",
+    "service": "LAYANAN",
+    "amount": "JUMLAH",
+    "total": "TOTAL PEMBAYARAN",
+    "method": "Metode",
+    "ref": "Ref",
+    "thankYou": "Terima kasih atas kepercayaan Anda.",
+    "print": "Cetak PDF"
   }
 }

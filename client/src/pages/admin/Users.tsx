@@ -55,7 +55,6 @@ export default function AdminUsersPage() {
                             </Avatar>
                             <div>
                               <p className="font-medium">{u.name || "Tanpa Nama"}</p>
-                              <p className="text-xs font-mono text-muted-foreground">{u.id}</p>
                             </div>
                           </td>
                           <td className="py-3">

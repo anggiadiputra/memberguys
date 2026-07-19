@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, integer, json, uuid } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, integer, json, uuid, unique } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 // -- Better Auth required tables --
@@ -7,6 +7,7 @@ export const users = pgTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
+  whatsapp: text("whatsapp"),
   emailVerified: boolean("email_verified").notNull(),
   image: text("image"),
   createdAt: timestamp("created_at").notNull(),
@@ -73,6 +74,10 @@ export const packages = pgTable("packages", {
   warrantyDays: integer("warranty_days").notNull(),
   featuresId: json("features_id").$type<string[]>().notNull(),
   featuresEn: json("features_en").$type<string[]>().notNull(),
+  // Fitur yang TIDAK termasuk di paket ini (dirender sebagai ✗). Default [] agar
+  // data paket lama (yang belum punya kolom ini) tetap valid tanpa migrasi data.
+  excludedFeaturesId: json("excluded_features_id").$type<string[]>().default([]).notNull(),
+  excludedFeaturesEn: json("excluded_features_en").$type<string[]>().default([]).notNull(),
   isActive: boolean("is_active").default(true).notNull(),
 });
 
@@ -85,6 +90,8 @@ export const transactions = pgTable("transactions", {
   status: text("status").default("pending").notNull(), // pending | paid | failed | cancelled
   paymentUrl: text("payment_url"),
   externalRefId: text("external_ref_id"),
+  // Fee SumoPod. Null jika payment di-confirm manual oleh admin (tidak dapat info fee).
+  fee: integer("fee"),
   paidAt: timestamp("paid_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -98,12 +105,21 @@ export const subscriptions = pgTable("subscriptions", {
   startsAt: timestamp("starts_at").defaultNow().notNull(),
   warrantyEndsAt: timestamp("warranty_ends_at").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (t) => ({
+  // Defense-in-depth: di level database, maksimal 1 subscription per transaksi.
+  // Melindungi dari bug logic / request paralel yang lolos dari atomic UPDATE.
+  // (Di Postgres, multiple NULL tetap diperbolehkan oleh unique constraint ini,
+  // jadi subscription lama tanpa transactionId tidak akan terkena.)
+  transactionIdUnique: unique().on(t.transactionId),
+}));
 
 export const settings = pgTable("settings", {
   key: text("key").primaryKey(),
   value: json("value").notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  // Optimistic concurrency: increment setiap write. Mencegah lost-update
+  // saat dua admin mengubah config payment secara bersamaan.
+  version: integer("version").default(1).notNull(),
 });
 
 // -- Relations --
