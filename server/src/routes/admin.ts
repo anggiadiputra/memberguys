@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { db } from "../db/index.js";
 import { users, transactions, subscriptions, services, packages } from "../db/schema.js";
-import { count, eq } from "drizzle-orm";
+import { count, eq, inArray, and } from "drizzle-orm";
 import { activateSubscription } from "../lib/transactions.js";
 
 const app = new Hono();
@@ -352,4 +352,68 @@ app.post("/activate-subscription", async (c) => {
   }
 
   return c.json({ subscription: sub });
+});
+
+// ─── STAFF MANAGEMENT ────────────────────────────────────
+// Endpoint ini hanya untuk role admin (diperiksa di handler).
+
+// GET /api/admin/staff — daftar staff (admin, finance, support)
+app.get("/staff", async (c) => {
+  // Validasi role
+  const adminId = c.req.header("X-Admin-Id");
+  const admin = await db.query.users.findFirst({ where: eq(users.id, adminId as string) });
+  if (!admin || admin.role !== "admin") return c.json({ error: "Forbidden" }, 403);
+
+  const all = await db.select().from(users).where(inArray(users.role, ["admin", "finance", "support"]));
+  return c.json(all);
+});
+
+// POST /api/admin/staff — tambah staff baru
+app.post("/staff", async (c) => {
+  const adminId = c.req.header("X-Admin-Id");
+  const admin = await db.query.users.findFirst({ where: eq(users.id, adminId as string) });
+  if (!admin || admin.role !== "admin") return c.json({ error: "Forbidden" }, 403);
+
+  const body = await c.req.json<{ name: string; email: string; whatsapp?: string; role: "admin" | "finance" | "support" }>();
+  if (!body.name || !body.email || !body.role) return c.json({ error: "name, email, role wajib diisi" }, 400);
+
+  const now = new Date();
+  const newId = `staff-${crypto.randomUUID()}`;
+
+  try {
+    const [row] = await db.insert(users).values({
+      id: newId,
+      name: body.name,
+      email: body.email,
+      whatsapp: body.whatsapp || null,
+      emailVerified: false,
+      role: body.role,
+      createdAt: now,
+      updatedAt: now,
+    }).returning();
+    return c.json(row, 201);
+  } catch (err: any) {
+    if (err?.code === "23505") return c.json({ error: "Email sudah terdaftar" }, 409);
+    throw err;
+  }
+});
+
+// PATCH /api/admin/staff/:id — edit role staff
+app.patch("/staff/:id", async (c) => {
+  const adminId = c.req.header("X-Admin-Id");
+  const admin = await db.query.users.findFirst({ where: eq(users.id, adminId as string) });
+  if (!admin || admin.role !== "admin") return c.json({ error: "Forbidden" }, 403);
+
+  const id = c.req.param("id");
+  const body = await c.req.json<{ role?: "admin" | "finance" | "support"; name?: string }>();
+  
+  const patch: any = {};
+  if (body.role) patch.role = body.role;
+  if (body.name) patch.name = body.name;
+
+  if (Object.keys(patch).length === 0) return c.json({ error: "Tidak ada field yang diupdate" }, 400);
+  
+  const [updated] = await db.update(users).set(patch).where(eq(users.id, id)).returning();
+  if (!updated) return c.json({ error: "Staff tidak ditemukan" }, 404);
+  return c.json(updated);
 });

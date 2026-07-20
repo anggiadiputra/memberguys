@@ -9,8 +9,9 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
-  LayoutDashboard, Users, CreditCard, Package,
+  LayoutDashboard, CreditCard, Package,
   Settings, LogOut, Globe, LayoutGrid, Menu, X,
+  Users, UserCog, UserCheck,
 } from "lucide-react";
 import i18n from "@/i18n";
 
@@ -29,13 +30,15 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     navigate("/login");
   };
 
+  const userRole = user?.role;
   const navItems = [
-    { href: "/admin", icon: LayoutDashboard, label: "Overview" },
-    { href: "/admin/transactions", icon: CreditCard, label: "Transaksi" },
-    { href: "/admin/users", icon: Users, label: "Pengguna" },
-    { href: "/admin/packages", icon: Package, label: "Paket & Layanan" },
-    { href: "/admin/settings", icon: Settings, label: "Settings" },
-  ];
+    { href: "/admin", icon: LayoutDashboard, label: "Ringkasan" },
+    { href: "/admin/pelanggan", icon: Users, label: "Pelanggan", roles: ["admin", "support"] },
+    { href: "/admin/transactions", icon: CreditCard, label: "Transaksi", roles: ["admin", "finance"] },
+    { href: "/admin/packages", icon: Package, label: "Paket & Layanan", roles: ["admin", "support"] },
+    { href: "/admin/settings", icon: Settings, label: "Settings", roles: ["admin"] },
+    { href: "/admin/pengguna", icon: UserCog, label: "Pengguna (Staff)", roles: ["admin"] },
+  ].filter((item) => !item.roles || item.roles.includes(userRole));
 
   const sidebar = (
     <>
