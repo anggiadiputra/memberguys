@@ -250,8 +250,6 @@ export default function AdminSettingsPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-5">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="space-y-5">
             {/* Mode toggle */}
             <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border">
               <div className="flex-1">
@@ -459,13 +457,9 @@ export default function AdminSettingsPage() {
             </div>
           </div>
 
-              </div>
-              <div className="space-y-5 border-l border-slate-200 lg:pl-6">
           {/* ── Tracking & Analytics ── */}
           <div className="border-t pt-5 space-y-4">
             <div>
-              </div>
-              <div className="space-y-5 border-l border-slate-200 lg:pl-6">
               <h4 className="text-sm font-semibold">Tracking & Analytics</h4>
               <p className="text-xs text-muted-foreground mt-0.5">Google Analytics, GTM, Facebook Pixel. UTM parameter otomatis tercapture saat checkout.</p>
             </div>
@@ -538,8 +532,6 @@ export default function AdminSettingsPage() {
                 </div>
               </div>
 
-              </div>
-            </div>
           {/* Actions */}
             <div className="flex items-center gap-3 pt-2">
               <Button onClick={onSave} disabled={saving} className="gap-2">
