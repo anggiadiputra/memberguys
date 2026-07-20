@@ -29,6 +29,7 @@ export default function PackageLandingPage() {
   const [email, setEmail] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
+  const [notes, setNotes] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<"qris" | "manual">("qris");
   const [checkoutStep, setCheckoutStep] = useState<any>(null);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
@@ -60,6 +61,7 @@ export default function PackageLandingPage() {
     if (s.email) setEmail(s.email);
     if (s.whatsapp) setWhatsapp(s.whatsapp);
     if (s.websiteUrl) setWebsiteUrl(s.websiteUrl);
+    if (s.notes) setNotes(s.notes);
   }, []);
 
   const persist = useCallback((p: Record<string, string>) => saveStored({ ...loadStored(), ...p }), []);
@@ -77,7 +79,7 @@ export default function PackageLandingPage() {
     try {
       const utm = getUtm();
       const res = await api.post<any>("/transactions/checkout", {
-        packageId: pkg.id, method: paymentMethod, name, email, whatsapp,
+        packageId: pkg.id, method: paymentMethod, name, email, whatsapp, notes,
         ...utm,
       });
       setCheckoutStep({ ...res });
@@ -92,7 +94,7 @@ export default function PackageLandingPage() {
       const utm = getUtm();
       await api.post<any>("/transactions", {
         transactionId: checkoutStep.transactionId, packageId: pkg.id, method: paymentMethod,
-        name, email, whatsapp, ...utm,
+        name, email, whatsapp, notes, ...utm,
         paymentUrl: checkoutStep.paymentUrl, externalRefId: checkoutStep.externalRefId, fee: checkoutStep.fee,
       });
       if (checkoutStep.paymentUrl) window.location.href = checkoutStep.paymentUrl;
@@ -127,6 +129,18 @@ export default function PackageLandingPage() {
           <div className="space-y-2">
             <Label>URL Website Target <span className="text-red-500">*</span></Label>
             <Input placeholder="https://www.websiteanda.com" value={websiteUrl} onChange={e => { setWebsiteUrl(e.target.value); persist({websiteUrl:e.target.value}); }} required className="h-12" />
+          </div>
+
+          {/* Catatan (opsional) */}
+          <div className="space-y-2">
+            <Label>Catatan <span className="text-xs text-muted-foreground font-normal">(opsional)</span></Label>
+            <textarea
+              placeholder="Tulis catatan tambahan untuk pesanan ini..."
+              value={notes}
+              onChange={e => { setNotes(e.target.value); persist({notes:e.target.value}); }}
+              rows={3}
+              className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            />
           </div>
 
           {/* Features */}
