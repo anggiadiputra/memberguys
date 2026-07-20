@@ -32,7 +32,6 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
   const userRole = user?.role;
   const navItems = [
-    { href: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
     { href: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ["admin"] },
     { href: "/admin/pelanggan", icon: Users, label: "Pelanggan", roles: ["admin", "support"] },
     { href: "/admin/transactions", icon: CreditCard, label: "Transaksi", roles: ["admin", "finance"] },
