@@ -22,6 +22,10 @@ export async function getPaymentConfig() {
     }>,
     fonnteToken: process.env.FONNTE_TOKEN || "",
     adminWhatsApp: process.env.ADMIN_WHATSAPP || "",
+    ga4Id: process.env.GA4_ID || "",
+    gtmId: process.env.GTM_ID || "",
+    fbPixelId: process.env.FB_PIXEL_ID || "",
+    trackingEnabled: false,
   };
 
   try {
@@ -82,6 +86,10 @@ app.post("/payment", async (c) => {
   if (body.bankAccounts !== undefined) newConfig.bankAccounts = body.bankAccounts;
   if (body.fonnteToken !== undefined) newConfig.fonnteToken = body.fonnteToken.startsWith("••••") ? currentConfig.fonnteToken : body.fonnteToken;
   if (body.adminWhatsApp !== undefined) newConfig.adminWhatsApp = body.adminWhatsApp;
+  if (body.ga4Id !== undefined) newConfig.ga4Id = body.ga4Id;
+  if (body.gtmId !== undefined) newConfig.gtmId = body.gtmId;
+  if (body.fbPixelId !== undefined) newConfig.fbPixelId = body.fbPixelId;
+  if (body.trackingEnabled !== undefined) newConfig.trackingEnabled = body.trackingEnabled;
 
   // Optimistic concurrency: klien mengirim _version yang dia baca. Server hanya
   // menerima write kalau version di DB sama — race antar admin akan ditolak

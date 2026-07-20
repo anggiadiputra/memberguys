@@ -67,6 +67,7 @@ export const services = pgTable("services", {
 
 export const packages = pgTable("packages", {
   id: uuid("id").defaultRandom().primaryKey(),
+  slug: text("slug").notNull().unique(),
   serviceId: uuid("service_id").notNull().references(() => services.id, { onDelete: "cascade" }),
   nameId: text("name_id").notNull(),
   nameEn: text("name_en").notNull(),
@@ -92,6 +93,10 @@ export const transactions = pgTable("transactions", {
   externalRefId: text("external_ref_id"),
   // Fee SumoPod. Null jika payment di-confirm manual oleh admin (tidak dapat info fee).
   fee: integer("fee"),
+  // UTM tracking — dari query string saat checkout
+  utmSource: text("utm_source"),
+  utmMedium: text("utm_medium"),
+  utmCampaign: text("utm_campaign"),
   paidAt: timestamp("paid_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

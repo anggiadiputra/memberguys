@@ -134,6 +134,11 @@ export default function AdminSettingsPage() {
   const [bankAccounts, setBankAccounts] = useState<{bankName: string; accountNumber: string; accountHolder: string}[]>([]);
   const [fonnteToken, setFonnteToken] = useState("");
   const [adminWhatsApp, setAdminWhatsApp] = useState("");
+  // Tracking
+  const [ga4Id, setGa4Id] = useState("");
+  const [gtmId, setGtmId] = useState("");
+  const [fbPixelId, setFbPixelId] = useState("");
+  const [trackingEnabled, setTrackingEnabled] = useState(false);
 
   // Toggle visibility
   const [showApi, setShowApi] = useState(false);
@@ -160,6 +165,10 @@ export default function AdminSettingsPage() {
         setBankAccounts(cfg.bankAccounts || []);
         setFonnteToken(cfg.fonnteToken || "");
         setAdminWhatsApp(cfg.adminWhatsApp || "");
+        setGa4Id(cfg.ga4Id || "");
+        setGtmId(cfg.gtmId || "");
+        setFbPixelId(cfg.fbPixelId || "");
+        setTrackingEnabled(cfg.trackingEnabled ?? false);
       }).catch(() => {});
     });
   }, []);
@@ -186,7 +195,7 @@ export default function AdminSettingsPage() {
     try {
       await api.post("/admin/settings/payment", {
         apiKey, webhookSecret, webhookToken, successUrl, cancelUrl, isSandbox,
-        manualPaymentEnabled, bankAccounts, fonnteToken, adminWhatsApp,
+        manualPaymentEnabled, bankAccounts, fonnteToken, adminWhatsApp, ga4Id, gtmId, fbPixelId, trackingEnabled,
       }, { headers: { "X-Admin-Id": adminId } });
       toast.success("Konfigurasi berhasil disimpan");
     } catch (e: any) {
@@ -445,6 +454,28 @@ export default function AdminSettingsPage() {
                   Nomor tujuan notifikasi pesanan masuk. Format: 628xxxxxxxxxx (tanpa + dan spasi).
                 </p>
               </div>
+            </div>
+          </div>
+
+          {/* ── Tracking & Analytics ── */}
+          <div className="border-t pt-5 space-y-4">
+            <div>
+              <h4 className="text-sm font-semibold">Tracking & Analytics</h4>
+              <p className="text-xs text-muted-foreground mt-0.5">Google Analytics, GTM, Facebook Pixel. UTM parameter otomatis tercapture saat checkout.</p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="ga4Id">GA4 Measurement ID</Label>
+                <Input id="ga4Id" placeholder="G-XXXXXXXXXX" value={ga4Id} onChange={(e) => setGa4Id(e.target.value)} className="h-9 text-xs" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="gtmId">GTM Container ID</Label>
+                <Input id="gtmId" placeholder="GTM-XXXXXXX" value={gtmId} onChange={(e) => setGtmId(e.target.value)} className="h-9 text-xs" />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="fbPixelId">Facebook Pixel ID</Label>
+              <Input id="fbPixelId" placeholder="1234567890" value={fbPixelId} onChange={(e) => setFbPixelId(e.target.value)} className="h-9 text-xs" />
             </div>
           </div>
 

@@ -218,6 +218,7 @@ function buildPackageForInsert(body: any): PackageInsert {
 
   return {
     serviceId: body.serviceId,
+    slug: sanitizeSlug(body.slug || body.nameId),
     nameId: body.nameId,
     nameEn: body.nameEn,
     price: body.price,

@@ -48,6 +48,7 @@ const RegisterPage = lazy(() => import("@/pages/auth/Register"));
 
 // Halaman Sales Khusus Layanan
 const MalwareLandingPage = lazy(() => import("@/pages/services/Malware"));
+const PackageLandingPage = lazy(() => import("@/pages/services/PackageLanding"));
 
 const PaymentSuccessPage = lazy(() => import("@/pages/payment/Success"));
 const PaymentCancelPage = lazy(() => import("@/pages/payment/Cancel"));
@@ -84,6 +85,7 @@ export default function App() {
             
             {/* Sales Pages */}
             <Route path="/layanan/hapus-malware" element={<MalwareLandingPage />} />
+            <Route path="/layanan/:serviceSlug/:packageSlug" element={<PackageLandingPage />} />
           </Route>
 
           {/* Protected – admin only */}
