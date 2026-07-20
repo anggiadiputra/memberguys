@@ -51,45 +51,61 @@ export default function LandingManagePage() {
       <div className="space-y-6 max-w-3xl">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold tracking-tight">Landing Page</h1>
-          <a href="/" target="_blank" rel="noopener noreferrer">
+          <a href="/layanan/hapus-malware" target="_blank" rel="noopener noreferrer">
             <Button variant="outline" size="sm" className="gap-2">
               <Eye className="w-4 h-4" /> Lihat Halaman
             </Button>
           </a>
         </div>
 
-        <Tabs defaultValue="hero" className="w-full">
+        <Tabs defaultValue="malware" className="w-full">
           <TabsList className="mb-4">
-            <TabsTrigger value="hero">Hero Section</TabsTrigger>
+            <TabsTrigger value="malware">Hapus Malware</TabsTrigger>
+            <TabsTrigger value="hero">Hero Utama</TabsTrigger>
             <TabsTrigger value="about">Tentang</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="hero">
+          <TabsContent value="malware">
             <Card>
               <CardHeader>
-                <CardTitle>Hero Section</CardTitle>
-                <CardDescription>Konten utama di halaman depan.</CardDescription>
+                <CardTitle>Halaman Layanan — Hapus Malware</CardTitle>
+                <CardDescription>Konten halaman <code className="text-xs bg-slate-100 px-1.5 py-0.5 rounded">/layanan/hapus-malware</code></CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label>Judul (Indonesia)</Label>
-                    <Input value={form.heroTitleId} onChange={(e) => update("heroTitleId", e.target.value)} />
+                    <Input value={form.heroTitleId} onChange={(e) => update("heroTitleId", e.target.value)} placeholder="Bersihkan Website Dari Iklan Judi & Malware" />
                   </div>
                   <div className="space-y-1.5">
                     <Label>Judul (English)</Label>
-                    <Input value={form.heroTitleEn} onChange={(e) => update("heroTitleEn", e.target.value)} />
+                    <Input value={form.heroTitleEn} onChange={(e) => update("heroTitleEn", e.target.value)} placeholder="Clean Your Website from Gambling Ads & Malware" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label>Deskripsi (Indonesia)</Label>
-                    <Input value={form.heroDescId} onChange={(e) => update("heroDescId", e.target.value)} />
+                    <Input value={form.heroDescId} onChange={(e) => update("heroDescId", e.target.value)} placeholder="Kembalikan reputasi SEO..." />
                   </div>
                   <div className="space-y-1.5">
                     <Label>Deskripsi (English)</Label>
-                    <Input value={form.heroDescEn} onChange={(e) => update("heroDescEn", e.target.value)} />
+                    <Input value={form.heroDescEn} onChange={(e) => update("heroDescEn", e.target.value)} placeholder="Restore SEO reputation..." />
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="hero">
+            <Card>
+              <CardHeader>
+                <CardTitle>Hero Section — Landing Utama</CardTitle>
+                <CardDescription>Konten hero di halaman depan <code className="text-xs bg-slate-100 px-1.5 py-0.5 rounded">/</code></CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label>CTA Button Text</Label>
+                  <Input value={form.heroCta} onChange={(e) => update("heroCta", e.target.value)} />
                 </div>
               </CardContent>
             </Card>
