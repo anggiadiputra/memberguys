@@ -7,9 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Plus, Cloud, Pencil, Trash2, Database, SearchX } from "lucide-react";
+import { Plus, Cloud, Pencil, Trash2, Database, SearchX, PackagePlus } from "lucide-react";
 import { useTable } from "@/hooks/useTable";
 import { SearchInput, TablePagination } from "@/components/table/TableComponents";
+import { ServiceFormDialog } from "@/components/admin/ServiceFormDialog";
+import { PackageFormDialog } from "@/components/admin/PackageFormDialog";
 import { usePageTitle } from "@/hooks/usePageTitle";
 
 export default function AdminPackagesPage() {
@@ -17,6 +19,13 @@ export default function AdminPackagesPage() {
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [adminId, setAdminId] = useState<string>("");
+
+  // Dialog state
+  const [serviceDialogOpen, setServiceDialogOpen] = useState(false);
+  const [editingService, setEditingService] = useState<any | null>(null);
+  const [pkgDialogOpen, setPkgDialogOpen] = useState(false);
+  const [editingPkg, setEditingPkg] = useState<any | null>(null);
+  const [pkgServiceId, setPkgServiceId] = useState<string>("");
 
   useEffect(() => {
     authClient.getSession().then(({ data }) => {
@@ -34,7 +43,7 @@ export default function AdminPackagesPage() {
       .finally(() => setLoading(false));
   };
 
-  // Flatten services + packages into rows
+  // Flatten
   const rows = services.flatMap((svc: any) =>
     (svc.packages || []).map((pkg: any) => ({ ...pkg, _service: svc }))
   );
@@ -50,12 +59,19 @@ export default function AdminPackagesPage() {
     ],
   });
 
-  const confirmDelete = async (id: string, type: "service" | "package") => {
-    if (!confirm(`Hapus ${type === "service" ? "layanan" : "paket"} ini?`)) return;
-    try {
-      await api.del(`/admin/${type}s/${id}`, { headers: { "X-Admin-Id": adminId } });
-      toast.success(`${type === "service" ? "Layanan" : "Paket"} berhasil dihapus`);
-      loadData();
+  const openCreateService = () => { setEditingService(null); setServiceDialogOpen(true); };
+  const openEditService = (svc: any) => { setEditingService(svc); setServiceDialogOpen(true); };
+  const openCreatePkg = (serviceId: string) => { setEditingPkg(null); setPkgServiceId(serviceId); setPkgDialogOpen(true); };
+  const openEditPkg = (pkg: any, serviceId: string) => { setEditingPkg(pkg); setPkgServiceId(serviceId); setPkgDialogOpen(true); };
+
+  const deleteService = async (id: string) => {
+    try { await api.del(`/admin/services/${id}`, { headers: { "X-Admin-Id": adminId } });
+      toast.success("Layanan berhasil dihapus"); loadData();
+    } catch (e: any) { toast.error(e.message); }
+  };
+  const deletePkg = async (id: string) => {
+    try { await api.del(`/admin/packages/${id}`, { headers: { "X-Admin-Id": adminId } });
+      toast.success("Paket berhasil dihapus"); loadData();
     } catch (e: any) { toast.error(e.message); }
   };
 
@@ -67,9 +83,7 @@ export default function AdminPackagesPage() {
             <h1 className="text-2xl font-bold tracking-tight">Paket & Layanan</h1>
             <p className="text-sm text-muted-foreground mt-1">Kelola layanan dan paket yang tersedia.</p>
           </div>
-          <Button className="gap-2" onClick={() => {
-            window.location.href = "/admin/packages/edit";
-          }}>
+          <Button className="gap-2" onClick={openCreateService}>
             <Plus className="h-4 w-4" /> Tambah Layanan
           </Button>
         </div>
@@ -135,11 +149,11 @@ export default function AdminPackagesPage() {
                         <td className="px-4 py-3 text-right">
                           <div className="flex items-center justify-end gap-1">
                             <Button size="sm" variant="ghost" className="h-7 w-7 p-0"
-                              onClick={() => alert("Edit " + pkg.nameId)} title="Edit Paket">
+                              onClick={() => openEditPkg(pkg, pkg._service?.id)} title="Edit Paket">
                               <Pencil className="w-3.5 h-3.5" />
                             </Button>
                             <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-red-500"
-                              onClick={() => confirmDelete(pkg.id, "package")} title="Hapus Paket">
+                              onClick={() => { if (confirm("Hapus paket ini?")) deletePkg(pkg.id); }} title="Hapus Paket">
                               <Trash2 className="w-3.5 h-3.5" />
                             </Button>
                           </div>
@@ -157,6 +171,13 @@ export default function AdminPackagesPage() {
             />
           </Card>
         )}
+
+        {/* Dialogs */}
+        <ServiceFormDialog open={serviceDialogOpen} onOpenChange={setServiceDialogOpen} service={editingService} adminId={adminId} onSaved={() => loadData()} />
+        <PackageFormDialog open={pkgDialogOpen} onOpenChange={setPkgDialogOpen} pkg={editingPkg} serviceId={pkgServiceId} adminId={adminId} onSaved={() => loadData()} />
+        {/* Dialogs */}
+        <ServiceFormDialog open={serviceDialogOpen} onOpenChange={setServiceDialogOpen} service={editingService} adminId={adminId} onSaved={() => loadData()} />
+        <PackageFormDialog open={pkgDialogOpen} onOpenChange={setPkgDialogOpen} pkg={editingPkg} serviceId={pkgServiceId} adminId={adminId} onSaved={() => loadData()} />
       </div>
     </AdminLayout>
   );
