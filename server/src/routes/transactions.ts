@@ -204,12 +204,13 @@ app.post("/", async (c) => {
     utmSource?: string;
     utmMedium?: string;
     utmCampaign?: string;
+    notes?: string;
     transactionId?: string; // reuse from /checkout
     paymentUrl?: string;
     externalRefId?: string | null;
     fee?: number | null;
   }>();
-  const { packageId, method, name, email, whatsapp, utmSource, utmMedium, utmCampaign, transactionId: existingTransactionId, paymentUrl: existingPaymentUrl, externalRefId: existingExternalRefId, fee: existingFee } = body;
+  const { packageId, method, name, email, whatsapp, notes, utmSource, utmMedium, utmCampaign, transactionId: existingTransactionId, paymentUrl: existingPaymentUrl, externalRefId: existingExternalRefId, fee: existingFee } = body;
 
   if (!packageId || !name || !email || !whatsapp) {
     return c.json({ error: "Data pelanggan dan paket wajib diisi" }, 400);
@@ -255,6 +256,7 @@ app.post("/", async (c) => {
       utmSource: utmSource || null,
       utmMedium: utmMedium || null,
       utmCampaign: utmCampaign || null,
+      notes: notes || null,
     })
     .returning();
 
