@@ -192,12 +192,11 @@ app.post("/payment/test", async (c) => {
 
 // POST /api/admin/settings/fonnte-test
 app.post("/fonnte-test", async (c) => {
-  const body = await c.req.json<{ token?: string; target?: string }>();
   const config = await getPaymentConfig();
-  const t = body.token || config.fonnteToken || "";
-  const n = body.target || config.adminWhatsApp || "";
-  if (!t) return c.json({ error: "Token belum diisi" }, 400);
-  if (!n) return c.json({ error: "Nomor tujuan belum diisi" }, 400);
+  const t = config.fonnteToken || "";
+  const n = config.adminWhatsApp || "";
+  if (!t) return c.json({ error: "Fonnte Token belum dikonfigurasi" }, 400);
+  if (!n) return c.json({ error: "Nomor WA admin belum dikonfigurasi" }, 400);
   const ok = await sendFonnteMessage(n, "✅ Test WA dari MemberGuys berhasil!", t);
   if (ok) return c.json({ status: "ok" });
   return c.json({ error: "Gagal kirim. Cek token & nomor." }, 502);

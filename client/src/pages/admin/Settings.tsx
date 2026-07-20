@@ -180,11 +180,9 @@ export default function AdminSettingsPage() {
                 <div className="space-y-1.5"><Label htmlFor="awa">No. WhatsApp Admin</Label><Input id="awa" placeholder="6281234567890" value={adminWA} onChange={(e) => setAdminWA(e.target.value)} className="h-9" /></div>
                 <div className="flex items-center gap-2 pt-1">
                   <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs" disabled={ft} onClick={async () => {
-                    if (!fonnteToken) { toast.error("Token kosong"); return; }
-                    if (!adminWA) { toast.error("No. WA kosong"); return; }
                     setFt(true);
                     try {
-                      const r = await api.post<any>("/admin/settings/fonnte-test", { token: fonnteToken, target: adminWA }, { headers: { "X-Admin-Id": adminId } });
+                      const r = await api.post<any>("/admin/settings/fonnte-test", {}, { headers: { "X-Admin-Id": adminId } });
                       if (r.status === "ok") { toast.success("WA test terkirim!"); setFtok(true); }
                     } catch(e:any) { toast.error(e.message || "Gagal"); setFtok(false); }
                     finally { setFt(false); }
