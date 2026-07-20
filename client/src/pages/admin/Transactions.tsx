@@ -105,12 +105,18 @@ export default function AdminTransactionsPage() {
                         </td>
                         <td className="px-3 py-3 text-right align-top whitespace-nowrap">
                           <p className="font-semibold text-slate-800">Rp {tr.amount.toLocaleString("id-ID")}</p>
-                          {tr.fee != null && tr.fee > 0 && (
-                            <p className="text-[11px] text-red-500">+ fee Rp {tr.fee.toLocaleString("id-ID")}</p>
+                        </td>
+                        <td className="px-3 py-3 text-right align-top whitespace-nowrap">
+                          {tr.fee != null && tr.fee > 0 ? (
+                            <span className="text-red-500 font-medium">Rp {tr.fee.toLocaleString("id-ID")}</span>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
                           )}
-                          {tr.fee != null && (
-                            <p className="text-xs text-muted-foreground mt-0.5">= Rp {(tr.amount + tr.fee).toLocaleString("id-ID")}</p>
-                          )}
+                        </td>
+                        <td className="px-3 py-3 text-right align-top whitespace-nowrap">
+                          <p className="font-semibold text-slate-800">
+                            Rp {(tr.amount + (tr.fee || 0)).toLocaleString("id-ID")}
+                          </p>
                         </td>
                         <td className="px-3 py-3 text-center align-top">
                           <Badge variant={tr.status === "paid" ? "default" : tr.status === "pending" ? "secondary" : "destructive"} className="text-[10px]">
