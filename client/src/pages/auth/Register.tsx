@@ -25,7 +25,7 @@ export default function RegisterPage() {
   const { data: session } = authClient.useSession();
   useEffect(() => {
     if (session?.user) {
-      navigate("/dashboard", { replace: true });
+      navigate("/admin", { replace: true });
     }
   }, [session, navigate]);
 
@@ -72,7 +72,7 @@ export default function RegisterPage() {
         if (redirected) return;
       }
       
-      navigate("/dashboard");
+      navigate("/admin");
     } catch {
       toast.error("Terjadi kesalahan");
     } finally {

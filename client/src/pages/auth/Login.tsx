@@ -25,7 +25,7 @@ export default function LoginPage() {
   
   useEffect(() => {
     if (session?.user) {
-      navigate("/dashboard", { replace: true });
+      navigate("/admin", { replace: true });
     }
   }, [session, navigate]);
 
@@ -72,7 +72,7 @@ export default function LoginPage() {
         if (redirected) return;
       }
 
-      navigate(role === "admin" ? "/admin" : "/dashboard");
+      navigate("/admin");
     } catch {
       toast.error("Terjadi kesalahan");
     } finally {
@@ -119,7 +119,7 @@ export default function LoginPage() {
             </div>
           </div>
           <Button variant="outline" className="w-full" disabled={loading}
-            onClick={() => authClient.signIn.social({ provider: "google", callbackURL: "/dashboard" })}>
+            onClick={() => authClient.signIn.social({ provider: "google", callbackURL: "/admin" })}>
             Google
           </Button>
         </CardContent>
