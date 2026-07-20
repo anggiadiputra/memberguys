@@ -196,12 +196,14 @@ export default function AdminPackagesPage() {
                           <DropdownMenuSeparator />
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <DropdownMenuItem
-                                className="text-red-600 focus:text-red-600"
-                                onSelect={(e) => e.preventDefault()}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-red-600 hover:text-red-600 w-full justify-start"
+                                onClick={() => e.preventDefault()}
                               >
                                 <Trash2 className="h-4 w-4 mr-2" /> Hapus Layanan
-                              </DropdownMenuItem>
+                              </Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
