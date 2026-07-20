@@ -35,6 +35,7 @@ function SessionSync() {
 
   return null;
 }
+import { TrackingScripts } from "@/components/TrackingScripts";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
@@ -74,6 +75,7 @@ export default function App() {
     <BrowserRouter>
       <Toaster richColors position="top-right" />
       <SessionSync />
+      <TrackingScripts />
       <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Public Routes with Layout */}
