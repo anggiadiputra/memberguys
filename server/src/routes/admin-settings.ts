@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { db } from "../db/index.js";
 import { users, settings } from "../db/schema.js";
 import { and, eq } from "drizzle-orm";
+import { sendFonnteMessage } from "../lib/fonnte.js";
 
 const app = new Hono();
 
@@ -187,6 +188,19 @@ app.post("/payment/test", async (c) => {
   } catch (err: any) {
     return c.json({ error: err.message || "Network Error" }, 502);
   }
+});
+
+// POST /api/admin/settings/fonnte-test
+app.post("/fonnte-test", async (c) => {
+  const body = await c.req.json<{ token?: string; target?: string }>();
+  const config = await getPaymentConfig();
+  const t = body.token || config.fonnteToken || "";
+  const n = body.target || config.adminWhatsApp || "";
+  if (!t) return c.json({ error: "Token belum diisi" }, 400);
+  if (!n) return c.json({ error: "Nomor tujuan belum diisi" }, 400);
+  const ok = await sendFonnteMessage(n, "✅ Test WA dari MemberGuys berhasil!", t);
+  if (ok) return c.json({ status: "ok" });
+  return c.json({ error: "Gagal kirim. Cek token & nomor." }, 502);
 });
 
 export default app;

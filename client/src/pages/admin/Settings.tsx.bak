@@ -52,8 +52,6 @@ export default function AdminSettingsPage() {
   const [fonnteToken, setFonnteToken] = useState("");
   const [adminWA, setAdminWA] = useState("");
   const [showFonnte, setShowFonnte] = useState(false);
-  const [ft, setFt] = useState(false);
-  const [ftok, setFtok] = useState<boolean | null>(null);
   const [ga4Id, setGa4Id] = useState("");
   const [gtmId, setGtmId] = useState("");
   const [fbPixelId, setFbPixelId] = useState("");
@@ -178,22 +176,6 @@ export default function AdminSettingsPage() {
                   <div className="relative"><Input id="ft" type={showFonnte ? "text" : "password"} value={fonnteToken} onChange={(e) => setFonnteToken(e.target.value)} className="pr-10 h-9" />
                     <button type="button" onClick={() => setShowFonnte(!showFonnte)} className="absolute right-3 top-1/2">{showFonnte ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button></div></div>
                 <div className="space-y-1.5"><Label htmlFor="awa">No. WhatsApp Admin</Label><Input id="awa" placeholder="6281234567890" value={adminWA} onChange={(e) => setAdminWA(e.target.value)} className="h-9" /></div>
-                <div className="flex items-center gap-2 pt-1">
-                  <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs" disabled={ft} onClick={async () => {
-                    if (!fonnteToken) { toast.error("Token kosong"); return; }
-                    if (!adminWA) { toast.error("No. WA kosong"); return; }
-                    setFt(true);
-                    try {
-                      const r = await api.post<any>("/admin/settings/fonnte-test", { token: fonnteToken, target: adminWA }, { headers: { "X-Admin-Id": adminId } });
-                      if (r.status === "ok") { toast.success("WA test terkirim!"); setFtok(true); }
-                    } catch(e:any) { toast.error(e.message || "Gagal"); setFtok(false); }
-                    finally { setFt(false); }
-                  }}>
-                    <TestTube2 className="w-3.5 h-3.5" />{ft ? "Mengirim..." : "Test WA"}
-                  </Button>
-                  {ftok === true && <CircleCheck className="w-4 h-4 text-green-500" />}
-                  {ftok === false && <CircleX className="w-4 h-4 text-red-500" />}
-                </div>
               </CardContent>
             </Card>
           </div>
