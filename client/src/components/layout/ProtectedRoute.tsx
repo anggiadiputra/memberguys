@@ -38,7 +38,7 @@ export function ProtectedRoute({ adminOnly = false }: { adminOnly?: boolean }) {
 
   // Admin-only: admin, finance, support
   if (adminOnly && session.user && (session.user as any)?.role !== "admin" && (session.user as any)?.role !== "finance" && (session.user as any)?.role !== "support") {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return <Outlet />;
