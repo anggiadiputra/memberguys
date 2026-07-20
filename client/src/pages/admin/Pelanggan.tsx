@@ -10,7 +10,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTable } from "@/hooks/useTable";
 import { SearchInput, TablePagination } from "@/components/table/TableComponents";
 
+import { usePageTitle } from "@/hooks/usePageTitle";
 export default function PelangganPage() {
+  usePageTitle("Pelanggan");
   const navigate = useNavigate();
   const [customers, setCustomers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

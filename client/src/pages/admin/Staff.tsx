@@ -10,7 +10,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { Plus, UserPlus } from "lucide-react";
 
+import { usePageTitle } from "@/hooks/usePageTitle";
 export default function StaffPage() {
+  usePageTitle("Staff");
   const [staff, setStaff] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { data: session } = authClient.useSession();

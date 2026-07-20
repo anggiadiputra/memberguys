@@ -3,7 +3,9 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Button } from "@/components/ui/button";
 import { XCircle, ArrowLeft } from "lucide-react";
 
+import { usePageTitle } from "@/hooks/usePageTitle";
 export default function PaymentCancelPage() {
+  usePageTitle("Pembayaran Dibatalkan");
   const [searchParams] = useSearchParams();
   const orderId = searchParams.get("order_id") || searchParams.get("payment_id");
 

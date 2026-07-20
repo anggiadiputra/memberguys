@@ -9,7 +9,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { User, Mail, Phone, Package, ShieldCheck, Clock, Calendar, Receipt, ExternalLink, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
+import { usePageTitle } from "@/hooks/usePageTitle";
 export default function CustomerDetailPage() {
+  usePageTitle("Detail Pelanggan");
   const { id } = useParams<{ id: string }>();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);

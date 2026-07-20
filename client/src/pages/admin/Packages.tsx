@@ -39,7 +39,9 @@ import {
 import { ServiceFormDialog } from "@/components/admin/ServiceFormDialog";
 import { PackageFormDialog } from "@/components/admin/PackageFormDialog";
 
+import { usePageTitle } from "@/hooks/usePageTitle";
 export default function AdminPackagesPage() {
+  usePageTitle("Paket export default function AdminPackagesPage() { Layanan");
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [adminId, setAdminId] = useState<string>("");

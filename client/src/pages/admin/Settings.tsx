@@ -113,7 +113,9 @@ function BankAccountRow({ index, account, onChange, onDelete, onMoveUp, onMoveDo
   );
 }
 
+import { usePageTitle } from "@/hooks/usePageTitle";
 export default function AdminSettingsPage() {
+  usePageTitle("Settings");
   const [adminId, setAdminId] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);

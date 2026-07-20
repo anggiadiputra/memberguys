@@ -11,7 +11,9 @@ import { toast } from "sonner";
 import { useTable } from "@/hooks/useTable";
 import { SearchInput, TablePagination } from "@/components/table/TableComponents";
 
+import { usePageTitle } from "@/hooks/usePageTitle";
 export default function AdminTransactionsPage() {
+  usePageTitle("Transaksi");
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [adminId, setAdminId] = useState<string>("");

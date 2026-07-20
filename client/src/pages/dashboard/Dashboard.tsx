@@ -11,7 +11,9 @@ import { Button } from "@/components/ui/button";
 import { Package, CreditCard, ShieldCheck, ArrowRight } from "lucide-react";
 import { differenceInDays } from "date-fns";
 
+import { usePageTitle } from "@/hooks/usePageTitle";
 export default function DashboardPage() {
+  usePageTitle("Dashboard");
   const { t } = useTranslation();
   const [user, setUser] = useState<any>(null);
   const [subs, setSubs] = useState<any[]>([]);

@@ -19,7 +19,9 @@ const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondar
   failed:  { label: "Gagal",   variant: "destructive", icon: XCircle },
 };
 
+import { usePageTitle } from "@/hooks/usePageTitle";
 export default function TransactionsPage() {
+  usePageTitle("Transaksi");
   const { t } = useTranslation();
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

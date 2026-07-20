@@ -35,7 +35,9 @@ const SERVICES = [
   },
 ];
 
+import { usePageTitle } from "@/hooks/usePageTitle";
 export default function LandingPage() {
+  usePageTitle("Beranda");
   const { t } = useTranslation();
 
   return (

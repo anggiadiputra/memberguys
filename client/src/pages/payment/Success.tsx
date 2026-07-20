@@ -4,7 +4,9 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Loader2, Package } from "lucide-react";
 
+import { usePageTitle } from "@/hooks/usePageTitle";
 export default function PaymentSuccessPage() {
+  usePageTitle("Pembayaran Berhasil");
   const [searchParams] = useSearchParams();
   const orderId = searchParams.get("order_id") || searchParams.get("payment_id");
   

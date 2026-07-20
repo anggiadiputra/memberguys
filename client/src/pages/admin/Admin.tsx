@@ -11,7 +11,9 @@ import { toast } from "sonner";
 import { useTable } from "@/hooks/useTable";
 import { SearchInput } from "@/components/table/TableComponents";
 
+import { usePageTitle } from "@/hooks/usePageTitle";
 export default function AdminPage() {
+  usePageTitle("Ringkasan");
   const [stats, setStats] = useState<any>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

@@ -8,7 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { User, Mail, Phone, Package, Clock, ShieldCheck, ExternalLink, Calendar, Receipt } from "lucide-react";
 
+import { usePageTitle } from "@/hooks/usePageTitle";
 export default function ProfilePage() {
+  usePageTitle("Profil");
   const { t } = useTranslation();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);

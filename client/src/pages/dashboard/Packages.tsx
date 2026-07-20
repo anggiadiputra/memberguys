@@ -9,7 +9,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { differenceInDays } from "date-fns";
 import { ShieldCheck } from "lucide-react";
 
+import { usePageTitle } from "@/hooks/usePageTitle";
 export default function PackagesPage() {
+  usePageTitle("Paket Saya");
   const { t } = useTranslation();
   const [subs, setSubs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

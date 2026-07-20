@@ -10,7 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 
+import { usePageTitle } from "@/hooks/usePageTitle";
 export default function RegisterPage() {
+  usePageTitle("Daftar");
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [name, setName] = useState("");

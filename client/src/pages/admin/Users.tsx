@@ -10,7 +10,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTable } from "@/hooks/useTable";
 import { SearchInput, TablePagination } from "@/components/table/TableComponents";
 
+import { usePageTitle } from "@/hooks/usePageTitle";
 export default function AdminUsersPage() {
+  usePageTitle("Pengguna");
   const navigate = useNavigate();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

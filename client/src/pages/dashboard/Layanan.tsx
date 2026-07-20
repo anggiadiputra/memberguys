@@ -11,7 +11,9 @@ import { toast } from "sonner";
 import { CheckCircle2, XCircle, Circle, CircleDot, Cloud, ShieldAlert, AlertTriangle, FileText } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
+import { usePageTitle } from "@/hooks/usePageTitle";
 export default function LayananPage() {
+  usePageTitle("Layanan");
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
