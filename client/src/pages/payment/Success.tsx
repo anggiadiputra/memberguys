@@ -8,7 +8,7 @@ import { usePageTitle } from "@/hooks/usePageTitle";
 export default function PaymentSuccessPage() {
   usePageTitle("Pembayaran Berhasil");
   const [searchParams] = useSearchParams();
-  const orderId = searchParams.get("order_id") || searchParams.get("payment_id");
+  const orderId = searchParams.get("order_id") || searchParams.get("payment_id") || searchParams.get("transactionId") || searchParams.get("transaction_id");
   
   const [status, setStatus] = useState<"loading" | "success" | "pending">("loading");
 

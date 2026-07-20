@@ -87,6 +87,8 @@ export default function App() {
             {/* Sales Pages */}
             <Route path="/layanan/hapus-malware" element={<MalwareLandingPage />} />
             <Route path="/layanan/:serviceSlug/:packageSlug" element={<PackageLandingPage />} />
+            <Route path="/payment/success" element={<PaymentSuccessPage />} />
+            <Route path="/payment/cancel" element={<PaymentCancelPage />} />
           </Route>
 
           {/* Protected – admin only */}
