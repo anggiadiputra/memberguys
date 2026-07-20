@@ -6,17 +6,19 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Check, ExternalLink, SearchX } from "lucide-react";
+import { Check, ExternalLink, ReceiptText, Printer, SearchX } from "lucide-react";
 import { toast } from "sonner";
 import { useTable } from "@/hooks/useTable";
 import { SearchInput, TablePagination } from "@/components/table/TableComponents";
-
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { usePageTitle } from "@/hooks/usePageTitle";
 export default function AdminTransactionsPage() {
   usePageTitle("Transaksi");
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [adminId, setAdminId] = useState<string>("");
+  const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
 
   const loadData = async (id: string) => {
     try {
@@ -145,6 +147,16 @@ export default function AdminTransactionsPage() {
                             </div>
                           )}
                           {tr.status === "paid" && (
+                            <div className="flex items-center justify-end gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 w-8 p-0"
+                              onClick={() => { setSelectedInvoice(tr); setInvoiceOpen(true); }}
+                              title="Lihat Invoice"
+                            >
+                              <ReceiptText className="w-4 h-4" />
+                            </Button>
                             <Button
                               size="sm"
                               variant="outline"
@@ -163,6 +175,7 @@ export default function AdminTransactionsPage() {
                             >
                               Aktifkan Garansi
                             </Button>
+                            </div>
                           )}
                         </td>
                       </tr>
@@ -188,6 +201,44 @@ export default function AdminTransactionsPage() {
           )}
         </Card>
       </div>
+
+      {/* Invoice Modal */}
+      <Dialog open={invoiceOpen} onOpenChange={setInvoiceOpen}>
+        <DialogContent className="sm:max-w-[460px] p-0 overflow-hidden rounded-xl border-slate-200 shadow-xl">
+          <div className="bg-gradient-to-r from-slate-50 to-white px-6 py-5 border-b">
+            <div className="flex justify-between items-start">
+              <div>
+                <DialogTitle className="text-xl font-bold text-slate-900">Invoice</DialogTitle>
+                <p className="text-xs text-muted-foreground font-mono mt-1">{selectedInvoice?.id}</p>
+              </div>
+              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 uppercase text-[10px] font-semibold">Lunas</Badge>
+            </div>
+          </div>
+          <div className="px-6 py-6 space-y-4">
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Dari</p><p className="font-bold text-slate-800 mt-1">MemberGuys</p><p className="text-xs text-slate-500">hello@ekstensi.id</p></div>
+              <div className="text-right"><p className="text-[10px] text-muted-foreground uppercase font-semibold">Tanggal</p><p className="font-semibold text-slate-800 mt-1">{new Date(selectedInvoice?.createdAt).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}</p></div>
+              <div className="col-span-2"><p className="text-[10px] text-muted-foreground uppercase font-semibold">Kepada</p><p className="font-semibold text-slate-800 mt-1">{selectedInvoice?.user?.name || "Pelanggan"}</p><p className="text-xs text-slate-500">{selectedInvoice?.user?.email}</p></div>
+            </div>
+            <div className="border rounded-lg overflow-hidden">
+              <table className="w-full text-sm">
+                <thead><tr className="bg-slate-50 border-b"><th className="text-left px-4 py-2.5 text-[10px] uppercase text-muted-foreground font-semibold">Layanan</th><th className="text-right px-4 py-2.5 text-[10px] uppercase text-muted-foreground font-semibold w-28">Jumlah</th></tr></thead>
+                <tbody><tr className="border-b"><td className="px-4 py-3"><p className="font-semibold text-slate-800">{selectedInvoice?.package?.service?.nameId} — {selectedInvoice?.package?.nameId}</p></td><td className="px-4 py-3 text-right font-semibold">Rp {selectedInvoice?.amount?.toLocaleString("id-ID")}</td></tr></tbody>
+                <tfoot>
+                  {selectedInvoice?.fee > 0 && <tr className="border-b"><td className="px-4 py-2 text-right text-xs text-red-500">Biaya Transaksi</td><td className="px-4 py-2 text-right text-xs text-red-500">Rp {selectedInvoice?.fee?.toLocaleString("id-ID")}</td></tr>}
+                  <tr className="bg-slate-50/50"><td className="px-4 py-3 text-right text-xs text-slate-600 uppercase font-semibold">Total</td><td className="px-4 py-3 text-right font-bold text-base text-slate-900">Rp {((selectedInvoice?.amount || 0) + (selectedInvoice?.fee || 0)).toLocaleString("id-ID")}</td></tr>
+                </tfoot>
+              </table>
+            </div>
+            <p className="text-center text-[10px] text-slate-400">Metode: {selectedInvoice?.paymentMethod === "manual" ? "Transfer Manual" : "QRIS (SumoPod)"} &middot; Ref: {selectedInvoice?.externalRefId || "-"}</p>
+          </div>
+          <div className="px-6 py-4 bg-slate-50 border-t flex justify-end print:hidden">
+            <Button onClick={() => window.print()} size="sm" variant="outline" className="gap-2 text-xs rounded-lg bg-white shadow-sm">
+              <Printer className="w-3.5 h-3.5" /> Cetak
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }
