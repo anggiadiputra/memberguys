@@ -10,8 +10,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard, CreditCard, Package,
-  Settings, LogOut, Globe, LayoutGrid, Menu, X,
-  Users, UserCog, UserCheck,
+  Settings, LogOut, Globe, Menu, X,
+  Users, UserCog, UserCheck, Globe2,
 } from "lucide-react";
 import i18n from "@/i18n";
 
@@ -33,9 +33,11 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const userRole = user?.role;
   const navItems = [
     { href: "/admin", icon: LayoutDashboard, label: "Ringkasan" },
+    { href: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ["admin"] },
     { href: "/admin/pelanggan", icon: Users, label: "Pelanggan", roles: ["admin", "support"] },
     { href: "/admin/transactions", icon: CreditCard, label: "Transaksi", roles: ["admin", "finance"] },
     { href: "/admin/packages", icon: Package, label: "Paket & Layanan", roles: ["admin", "support"] },
+    { href: "/admin/landing", icon: Globe2, label: "Landing Page", roles: ["admin"] },
     { href: "/admin/settings", icon: Settings, label: "Settings", roles: ["admin"] },
     { href: "/admin/pengguna", icon: UserCog, label: "Pengguna (Staff)", roles: ["admin"] },
   ].filter((item) => !item.roles || item.roles.includes(userRole));

@@ -59,6 +59,8 @@ const AdminPackagesPage = lazy(() => import("@/pages/admin/Packages"));
 const PelangganPage = lazy(() => import("@/pages/admin/Pelanggan"));
 const StaffPage = lazy(() => import("@/pages/admin/Staff"));
 const CustomerDetailPage = lazy(() => import("@/pages/admin/CustomerDetail"));
+const DashboardPage = lazy(() => import("@/pages/admin/Dashboard"));
+const LandingManagePage = lazy(() => import("@/pages/admin/LandingManage"));
 
 // Komponen fallback selama file JS halaman sedang diunduh
 const PageLoader = () => (
@@ -86,6 +88,7 @@ export default function App() {
 
           {/* Protected – admin only */}
           <Route element={<ProtectedRoute adminOnly />}>
+            <Route path="/admin/dashboard" element={<DashboardPage />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/admin/transactions" element={<AdminTransactionsPage />} />
             <Route path="/admin/users" element={<PelangganPage />} />
@@ -94,6 +97,7 @@ export default function App() {
             <Route path="/admin/pelanggan/:id" element={<CustomerDetailPage />} />
             <Route path="/admin/packages" element={<AdminPackagesPage />} />
             <Route path="/admin/pengguna" element={<StaffPage />} />
+            <Route path="/admin/landing" element={<LandingManagePage />} />
             <Route path="/admin/settings" element={<AdminSettingsPage />} />
           </Route>
 
