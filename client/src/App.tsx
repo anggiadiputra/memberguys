@@ -49,12 +49,6 @@ const RegisterPage = lazy(() => import("@/pages/auth/Register"));
 // Halaman Sales Khusus Layanan
 const MalwareLandingPage = lazy(() => import("@/pages/services/Malware"));
 
-const DashboardPage = lazy(() => import("@/pages/dashboard/Dashboard"));
-const PackagesPage = lazy(() => import("@/pages/dashboard/Packages"));
-const TransactionsPage = lazy(() => import("@/pages/dashboard/Transactions"));
-const LayananPage = lazy(() => import("@/pages/dashboard/Layanan"));
-const ProfilePage = lazy(() => import("@/pages/dashboard/Profile"));
-
 const PaymentSuccessPage = lazy(() => import("@/pages/payment/Success"));
 const PaymentCancelPage = lazy(() => import("@/pages/payment/Cancel"));
 
@@ -88,17 +82,6 @@ export default function App() {
             
             {/* Sales Pages */}
             <Route path="/layanan/hapus-malware" element={<MalwareLandingPage />} />
-          </Route>
-
-          {/* Protected – member */}
-          <Route element={<ProtectedRoute />}>
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/dashboard/layanan" element={<LayananPage />} />
-            <Route path="/dashboard/packages" element={<PackagesPage />} />
-            <Route path="/dashboard/transactions" element={<TransactionsPage />} />
-            <Route path="/dashboard/profile" element={<ProfilePage />} />
-            <Route path="/payment/success" element={<PaymentSuccessPage />} />
-            <Route path="/payment/cancel" element={<PaymentCancelPage />} />
           </Route>
 
           {/* Protected – admin only */}
