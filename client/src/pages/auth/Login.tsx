@@ -20,14 +20,15 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Jika user sudah login (misal dari tab lain), redirect ke dashboard
+  // Jika user sudah login, redirect ke admin
   const { data: session } = authClient.useSession();
-  
+  const userId = session?.user?.id;
+
   useEffect(() => {
-    if (session?.user) {
+    if (userId) {
       navigate("/admin", { replace: true });
     }
-  }, [session, navigate]);
+  }, [userId, navigate]);
 
   // Fungsi untuk melanjutkan pesanan tertunda (jika ada) setelah register/login
   const processPendingOrder = async (userId: string) => {
