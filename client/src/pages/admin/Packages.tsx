@@ -17,6 +17,7 @@ import {
   MoreVertical,
   PackagePlus,
   DatabaseBackup,
+  ExternalLink,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -251,6 +252,15 @@ export default function AdminPackagesPage() {
                         <div className="flex justify-between items-center mb-1">
                           <span className="font-semibold">{pkg.nameId}</span>
                           <div className="flex items-center gap-2">
+                            <a
+                              href={`/layanan/${svc.slug}/${pkg.slug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Lihat halaman publik"
+                              className="text-muted-foreground hover:text-primary transition-colors"
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                            </a>
                             <span className="text-primary font-medium">
                               Rp {pkg.price.toLocaleString("id-ID")}
                             </span>
