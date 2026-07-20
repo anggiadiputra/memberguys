@@ -255,12 +255,12 @@ export default function AdminTransactionsPage() {
                 <tfoot>
                   {selectedInvoice?.fee > 0 && (
                     <tr className="border-b border-slate-100">
-                      <td className="px-4 py-2.5 text-right text-xs text-red-500 font-medium" colspan="2">Biaya Transaksi (SumoPod)</td>
+                      <td className="px-4 py-2.5 text-right text-xs text-red-500 font-medium" colSpan={2}>Biaya Transaksi (SumoPod)</td>
                       <td className="px-4 py-2.5 text-right text-xs text-red-500">Rp {selectedInvoice?.fee?.toLocaleString("id-ID")}</td>
                     </tr>
                   )}
                   <tr className="bg-slate-50/80">
-                    <td className="px-4 py-3.5 text-right text-xs text-slate-600 uppercase font-semibold tracking-wider" colspan="2">Total</td>
+                    <td className="px-4 py-3.5 text-right text-xs text-slate-600 uppercase font-semibold tracking-wider" colSpan={2}>Total</td>
                     <td className="px-4 py-3.5 text-right font-bold text-lg text-slate-900">Rp {((selectedInvoice?.amount || 0) + (selectedInvoice?.fee || 0)).toLocaleString("id-ID")}</td>
                   </tr>
                 </tfoot>
