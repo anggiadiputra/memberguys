@@ -98,33 +98,34 @@ async function callSumoPod(
 // Jika email sudah ada, kembalikan ID-nya (dan update WA jika belum ada/berbeda).
 // Jika belum ada, buat shadow user (guest).
 async function getOrCreateUser(name: string, email: string, whatsapp: string): Promise<string> {
-  const existing = await db.query.users.findFirst({
-    where: eq(users.email, email),
-  });
-
-  if (existing) {
-    // Update WA jika diperlukan, ignore error
-    if (whatsapp && existing.whatsapp !== whatsapp) {
-      await db.update(users).set({ whatsapp }).where(eq(users.id, existing.id));
-    }
-    return existing.id;
-  }
-
-  // Buat Shadow User (Guest)
   const newId = `guest-${crypto.randomUUID()}`;
   const now = new Date();
-  await db.insert(users).values({
-    id: newId,
-    name,
-    email,
-    whatsapp,
-    emailVerified: false,
-    role: "user",
-    createdAt: now,
-    updatedAt: now,
-  });
 
-  return newId;
+  // Atomic upsert — one statement, no race window.
+  // ON CONFLICT: jika email sudah ada, update name & whatsapp, kembalikan id yang sudah ada.
+  const [user] = await db
+    .insert(users)
+    .values({
+      id: newId,
+      name,
+      email,
+      whatsapp,
+      emailVerified: false,
+      role: "user",
+      createdAt: now,
+      updatedAt: now,
+    })
+    .onConflictDoUpdate({
+      target: users.email,
+      set: {
+        name,
+        whatsapp,
+        updatedAt: now,
+      },
+    })
+    .returning({ id: users.id });
+
+  return user.id;
 }
 
 // ─── Routes ──────────────────────────────────────────────
@@ -197,11 +198,12 @@ app.post("/", async (c) => {
     name: string;
     email: string;
     whatsapp: string;
+    transactionId?: string; // reuse from /checkout
     paymentUrl?: string;
     externalRefId?: string | null;
     fee?: number | null;
   }>();
-  const { packageId, method, name, email, whatsapp, paymentUrl: existingPaymentUrl, externalRefId: existingExternalRefId, fee: existingFee } = body;
+  const { packageId, method, name, email, whatsapp, transactionId: existingTransactionId, paymentUrl: existingPaymentUrl, externalRefId: existingExternalRefId, fee: existingFee } = body;
 
   if (!packageId || !name || !email || !whatsapp) {
     return c.json({ error: "Data pelanggan dan paket wajib diisi" }, 400);
@@ -215,15 +217,15 @@ app.post("/", async (c) => {
   });
   if (!pkg) return c.json({ error: "Package not found" }, 404);
 
-  // Generate ID
-  const transactionId = generateTransactionId();
+  // Gunakan ID dari checkout jika disediakan, kalau tidak buat baru
+  const transactionId = existingTransactionId || generateTransactionId();
 
   let paymentUrl = existingPaymentUrl || "";
   let externalRefId = existingExternalRefId ?? null;
   let fee = existingFee !== undefined ? existingFee : null;
 
   // Jika belum ada data (langsung tanpa /checkout), panggil helper
-  if (!paymentUrl) {
+  if (!paymentUrl || !existingTransactionId) {
     const sumoRes = await callSumoPod(transactionId, pkg.price, method || "qris");
     paymentUrl = sumoRes.paymentUrl;
     externalRefId = sumoRes.externalRefId;

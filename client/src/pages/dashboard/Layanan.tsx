@@ -103,6 +103,7 @@ export default function LayananPage() {
     setConfirming(true);
     try {
       await api.post<any>("/transactions", {
+        transactionId: checkoutData.transactionId,
         packageId: selectedPkg?.id,
         method: paymentMethod,
         name: user?.name || "",

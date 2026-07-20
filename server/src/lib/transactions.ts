@@ -66,6 +66,7 @@ export async function activateSubscription(
       startsAt: now,
       warrantyEndsAt,
     })
+    .onConflictDoNothing()
     .returning();
 
   return sub || null;
@@ -75,6 +76,5 @@ export async function activateSubscription(
  * Generate transaction ID tahan collision.
  */
 export function generateTransactionId(): string {
-  const rand = Math.random().toString(36).slice(2, 8);
-  return `TRX-${Date.now()}-${rand}`;
+  return `TRX-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
 }
