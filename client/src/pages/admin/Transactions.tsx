@@ -82,7 +82,9 @@ export default function AdminTransactionsPage() {
                       <th className="px-3 py-3 whitespace-nowrap">Tanggal</th>
                       <th className="px-3 py-3 whitespace-nowrap">Pelanggan</th>
                       <th className="px-3 py-3 whitespace-nowrap">Layanan</th>
-                      <th className="px-3 py-3 text-right whitespace-nowrap">Tagihan</th>
+                      <th className="px-3 py-3 text-right whitespace-nowrap">Biaya Jasa</th>
+                      <th className="px-3 py-3 text-right whitespace-nowrap">Fee Payment</th>
+                      <th className="px-3 py-3 text-right whitespace-nowrap">Total Tagihan</th>
                       <th className="px-3 py-3 text-center whitespace-nowrap">Status</th>
                       <th className="px-3 py-3 text-right whitespace-nowrap w-36">Aksi</th>
                     </tr>
