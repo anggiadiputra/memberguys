@@ -231,15 +231,17 @@ export default function AdminSettingsPage() {
 
   return (
     <AdminLayout>
-      <div className="space-y-6 max-w-2xl">
+      <div className="space-y-6 max-w-4xl">
         <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
 
-        {/* SumoPod Payment Gateway */}
+        {/* Payment Gateway */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Payment Gateway — SumoPod</CardTitle>
+                <CardTitle>Payment Gateway</CardTitle>
                 <CardDescription className="mt-1">
                   Konfigurasi integrasi SumoPod Managed Payment untuk menerima pembayaran QRIS.
                 </CardDescription>
@@ -457,29 +459,7 @@ export default function AdminSettingsPage() {
             </div>
           </div>
 
-          {/* ── Tracking & Analytics ── */}
-          <div className="border-t pt-5 space-y-4">
-            <div>
-              <h4 className="text-sm font-semibold">Tracking & Analytics</h4>
-              <p className="text-xs text-muted-foreground mt-0.5">Google Analytics, GTM, Facebook Pixel. UTM parameter otomatis tercapture saat checkout.</p>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="ga4Id">GA4 Measurement ID</Label>
-                <Input id="ga4Id" placeholder="G-XXXXXXXXXX" value={ga4Id} onChange={(e) => setGa4Id(e.target.value)} className="h-9 text-xs" />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="gtmId">GTM Container ID</Label>
-                <Input id="gtmId" placeholder="GTM-XXXXXXX" value={gtmId} onChange={(e) => setGtmId(e.target.value)} className="h-9 text-xs" />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="fbPixelId">Facebook Pixel ID</Label>
-              <Input id="fbPixelId" placeholder="1234567890" value={fbPixelId} onChange={(e) => setFbPixelId(e.target.value)} className="h-9 text-xs" />
-            </div>
-          </div>
-
-          {/* ── Integrasi Manual Payment (existing) ── */}
+          {/* ── Manual Payment ── */}
           <div className="border-t pt-5 space-y-4">
                 <div className="flex items-center justify-between">
                   <Label className="text-sm font-medium">Rekening Tujuan</Label>
@@ -555,6 +535,16 @@ export default function AdminSettingsPage() {
             </div>
           </CardContent>
         </Card>
+
+        <Card className="shadow-sm overflow-hidden">
+          <CardHeader><CardTitle>Tracking & Analytics</CardTitle><CardDescription>Google Analytics, GTM, Facebook Pixel.</CardDescription></CardHeader>
+          <CardContent className="space-y-5">
+            <div className="space-y-1.5"><Label htmlFor="ga4Id">GA4 Measurement ID</Label><Input id="ga4Id" placeholder="G-XXXXXXXXXX" value={ga4Id} onChange={(e) => setGa4Id(e.target.value)} className="h-9 text-xs" /></div>
+            <div className="space-y-1.5"><Label htmlFor="gtmId">GTM Container ID</Label><Input id="gtmId" placeholder="GTM-XXXXXXX" value={gtmId} onChange={(e) => setGtmId(e.target.value)} className="h-9 text-xs" /></div>
+            <div className="space-y-1.5"><Label htmlFor="fbPixelId">Facebook Pixel ID</Label><Input id="fbPixelId" placeholder="1234567890" value={fbPixelId} onChange={(e) => setFbPixelId(e.target.value)} className="h-9 text-xs" /></div>
+          </CardContent>
+        </Card>
+        </div>{/* end grid */}
 
         {/* Webhook Events Info */}
         <Card>
