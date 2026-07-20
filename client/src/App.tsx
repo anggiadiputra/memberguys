@@ -53,7 +53,6 @@ const PackageLandingPage = lazy(() => import("@/pages/services/PackageLanding"))
 const PaymentSuccessPage = lazy(() => import("@/pages/payment/Success"));
 const PaymentCancelPage = lazy(() => import("@/pages/payment/Cancel"));
 
-const AdminPage = lazy(() => import("@/pages/admin/Admin"));
 const AdminSettingsPage = lazy(() => import("@/pages/admin/Settings"));
 const AdminTransactionsPage = lazy(() => import("@/pages/admin/Transactions"));
 const AdminPackagesPage = lazy(() => import("@/pages/admin/Packages"));
@@ -91,7 +90,7 @@ export default function App() {
           {/* Protected – admin only */}
           <Route element={<ProtectedRoute adminOnly />}>
             <Route path="/admin/dashboard" element={<DashboardPage />} />
-            <Route path="/admin" element={<AdminPage />} />
+            <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="/admin/transactions" element={<AdminTransactionsPage />} />
             <Route path="/admin/users" element={<PelangganPage />} />
             <Route path="/admin/users/:id" element={<CustomerDetailPage />} />
