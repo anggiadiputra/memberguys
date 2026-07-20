@@ -204,37 +204,80 @@ export default function AdminTransactionsPage() {
 
       {/* Invoice Modal */}
       <Dialog open={invoiceOpen} onOpenChange={setInvoiceOpen}>
-        <DialogContent className="sm:max-w-[460px] p-0 overflow-hidden rounded-xl border-slate-200 shadow-xl">
-          <div className="bg-gradient-to-r from-slate-50 to-white px-6 py-5 border-b">
+        <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden rounded-xl border-slate-200 shadow-xl">
+          <div className="bg-white px-6 py-5 border-b border-slate-100">
             <div className="flex justify-between items-start">
               <div>
-                <DialogTitle className="text-xl font-bold text-slate-900">Invoice</DialogTitle>
-                <p className="text-xs text-muted-foreground font-mono mt-1">{selectedInvoice?.id}</p>
+                <DialogTitle className="text-xl font-bold text-slate-900 tracking-tight">INVOICE</DialogTitle>
+                <p className="text-xs text-muted-foreground font-mono mt-1.5">{selectedInvoice?.id}</p>
               </div>
-              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 uppercase text-[10px] font-semibold">Lunas</Badge>
+              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300 uppercase text-[10px] font-semibold tracking-wider px-2.5 py-1 rounded-sm">Lunas</Badge>
             </div>
           </div>
-          <div className="px-6 py-6 space-y-4">
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div><p className="text-[10px] text-muted-foreground uppercase font-semibold">Dari</p><p className="font-bold text-slate-800 mt-1">MemberGuys</p><p className="text-xs text-slate-500">hello@ekstensi.id</p></div>
-              <div className="text-right"><p className="text-[10px] text-muted-foreground uppercase font-semibold">Tanggal</p><p className="font-semibold text-slate-800 mt-1">{new Date(selectedInvoice?.createdAt).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}</p></div>
-              <div className="col-span-2"><p className="text-[10px] text-muted-foreground uppercase font-semibold">Kepada</p><p className="font-semibold text-slate-800 mt-1">{selectedInvoice?.user?.name || "Pelanggan"}</p><p className="text-xs text-slate-500">{selectedInvoice?.user?.email}</p></div>
+          <div className="px-6 py-6 space-y-6">
+            <div className="grid grid-cols-2 gap-y-4 text-sm">
+              <div>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold mb-1">Dari</p>
+                <p className="font-bold text-slate-800">MemberGuys</p>
+                <p className="text-xs text-slate-500">hello@ekstensi.id</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold mb-1">Tanggal</p>
+                <p className="font-semibold text-slate-800">{new Date(selectedInvoice?.createdAt).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}</p>
+              </div>
+              <div className="col-span-2">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold mb-1">Kepada</p>
+                <p className="font-semibold text-slate-800">{selectedInvoice?.user?.name || "Pelanggan"}</p>
+                <p className="text-xs text-slate-500">{selectedInvoice?.user?.email}</p>
+              </div>
             </div>
-            <div className="border rounded-lg overflow-hidden">
+
+            <div className="border border-slate-200 rounded-xl overflow-hidden">
               <table className="w-full text-sm">
-                <thead><tr className="bg-slate-50 border-b"><th className="text-left px-4 py-2.5 text-[10px] uppercase text-muted-foreground font-semibold">Layanan</th><th className="text-right px-4 py-2.5 text-[10px] uppercase text-muted-foreground font-semibold w-28">Jumlah</th></tr></thead>
-                <tbody><tr className="border-b"><td className="px-4 py-3"><p className="font-semibold text-slate-800">{selectedInvoice?.package?.service?.nameId} — {selectedInvoice?.package?.nameId}</p></td><td className="px-4 py-3 text-right font-semibold">Rp {selectedInvoice?.amount?.toLocaleString("id-ID")}</td></tr></tbody>
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200">
+                    <th className="text-left px-4 py-3 text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Layanan</th>
+                    <th className="text-left px-4 py-3 text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">ID SumoPod</th>
+                    <th className="text-right px-4 py-3 text-[10px] uppercase tracking-widest text-muted-foreground font-semibold w-28">Jumlah</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b border-slate-100">
+                    <td className="px-4 py-3.5">
+                      <p className="font-semibold text-slate-800">{selectedInvoice?.package?.service?.nameId} — {selectedInvoice?.package?.nameId}</p>
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <p className="text-xs font-mono text-slate-600">{selectedInvoice?.externalRefId || "-"}</p>
+                    </td>
+                    <td className="px-4 py-3.5 text-right font-semibold text-slate-800">Rp {selectedInvoice?.amount?.toLocaleString("id-ID")}</td>
+                  </tr>
+                </tbody>
                 <tfoot>
-                  {selectedInvoice?.fee > 0 && <tr className="border-b"><td className="px-4 py-2 text-right text-xs text-red-500">Biaya Transaksi</td><td className="px-4 py-2 text-right text-xs text-red-500">Rp {selectedInvoice?.fee?.toLocaleString("id-ID")}</td></tr>}
-                  <tr className="bg-slate-50/50"><td className="px-4 py-3 text-right text-xs text-slate-600 uppercase font-semibold">Total</td><td className="px-4 py-3 text-right font-bold text-base text-slate-900">Rp {((selectedInvoice?.amount || 0) + (selectedInvoice?.fee || 0)).toLocaleString("id-ID")}</td></tr>
+                  {selectedInvoice?.fee > 0 && (
+                    <tr className="border-b border-slate-100">
+                      <td className="px-4 py-2.5 text-right text-xs text-red-500 font-medium" colspan="2">Biaya Transaksi (SumoPod)</td>
+                      <td className="px-4 py-2.5 text-right text-xs text-red-500">Rp {selectedInvoice?.fee?.toLocaleString("id-ID")}</td>
+                    </tr>
+                  )}
+                  <tr className="bg-slate-50/80">
+                    <td className="px-4 py-3.5 text-right text-xs text-slate-600 uppercase font-semibold tracking-wider" colspan="2">Total</td>
+                    <td className="px-4 py-3.5 text-right font-bold text-lg text-slate-900">Rp {((selectedInvoice?.amount || 0) + (selectedInvoice?.fee || 0)).toLocaleString("id-ID")}</td>
+                  </tr>
                 </tfoot>
               </table>
             </div>
-            <p className="text-center text-[10px] text-slate-400">Metode: {selectedInvoice?.paymentMethod === "manual" ? "Transfer Manual" : "QRIS (SumoPod)"} &middot; Ref: {selectedInvoice?.externalRefId || "-"}</p>
+
+            <div className="text-center space-y-1.5">
+              <p className="text-[10px] text-muted-foreground">
+                Metode: <span className="font-medium text-slate-700">{selectedInvoice?.paymentMethod === "manual" ? "Transfer Manual" : "QRIS (SumoPod)"}</span>
+                {selectedInvoice?.externalRefId && <><span className="mx-1.5 text-slate-300">|</span>ID SumoPod: <span className="font-mono text-slate-700">{selectedInvoice.externalRefId}</span></>}
+              </p>
+              <p className="text-[10px] text-slate-400 italic">Terima kasih atas kepercayaan Anda.</p>
+            </div>
           </div>
-          <div className="px-6 py-4 bg-slate-50 border-t flex justify-end print:hidden">
+          <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end print:hidden">
             <Button onClick={() => window.print()} size="sm" variant="outline" className="gap-2 text-xs rounded-lg bg-white shadow-sm">
-              <Printer className="w-3.5 h-3.5" /> Cetak
+              <Printer className="w-3.5 h-3.5" /> Cetak Invoice
             </Button>
           </div>
         </DialogContent>
